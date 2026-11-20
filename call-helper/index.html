@@ -41,6 +41,8 @@ h1{font-size:20px;letter-spacing:.5px}h1 b{color:var(--y)}
 .steps button.close{background:var(--g);color:#06210f}
 dialog{border:0;border-radius:20px;background:var(--card);color:var(--ink);padding:18px;width:min(92vw,460px);margin:auto}
 dialog::backdrop{background:rgba(0,0,0,.7)}
+#endDlg label{display:block;font-size:13px;color:var(--mute);margin-top:12px}
+#endDlg input{width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a;background:var(--bg);color:var(--ink);font-size:16px;margin-top:4px}
 dialog label{display:block;font-size:13px;color:var(--mute);margin-top:10px}
 dialog input{width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a;background:var(--bg);color:var(--ink);font-size:16px;margin-top:4px}
 .btn{border:0;border-radius:14px;padding:12px 16px;font-weight:800;background:var(--y);color:#111;margin-top:14px;width:100%;font-size:16px}
@@ -49,6 +51,18 @@ dialog input{width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a
 body.simple .extra{display:none!important}
 #more{border:0;background:none;color:var(--mute);font-weight:700;font-size:14px;width:100%;padding:14px;margin-top:10px;text-decoration:underline}
 body.simple #reply .say{font-size:21px}body.simple #reply .te{font-size:18px}
+.callbar{display:flex;gap:8px;margin-top:10px}
+.callbar button{flex:1;border:0;border-radius:16px;padding:13px;font-weight:800;font-size:15px}
+#endCall{background:var(--g);color:#06210f;display:none}
+#statsBtn{background:#2a241e;color:var(--ink)}
+.out{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.out button{border:0;border-radius:16px;padding:16px 6px;font-weight:800;font-size:15px}
+.score{font-size:54px;font-weight:900;color:var(--y);line-height:1}
+.tipline{background:var(--bg);border-radius:12px;padding:10px 12px;margin-top:8px;font-size:14px}
+.good{border-left:4px solid var(--g)}.bad{border-left:4px solid var(--r)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.stat{background:var(--bg);border-radius:14px;padding:12px}.stat b{display:block;font-size:26px;color:var(--y)}
+dialog{max-height:88vh;overflow:auto}
 #hist .h{background:var(--card);border-radius:12px;padding:8px 12px;margin-top:6px;font-size:14px;color:var(--mute)}
 </style>
 </head>
@@ -64,6 +78,7 @@ body.simple #reply .say{font-size:21px}body.simple #reply .te{font-size:18px}
 <div class="wrap">
   <div class="warn" id="warn"></div>
   <button id="mic">🎙️ Start listening</button>
+  <div class="callbar"><button id="endCall">✅ End call &amp; review</button><button id="statsBtn">📊 My calls</button></div>
   <p class="note extra">Call on <b>speaker</b> on your phone. Open this app on a <b>second phone or laptop</b> next to it. Choose EN or తెలుగు to match what the owner speaks.</p>
 
   <div class="label extra">They said</div>
@@ -97,10 +112,21 @@ body.simple #reply .say{font-size:21px}body.simple #reply .te{font-size:18px}
   <button id="more">Show more ▾</button>
 </div>
 
+<dialog id="endDlg">
+  <h2 style="font-size:18px">How did the call go?</h2>
+  <div class="out">
+    <button data-o="deal" style="background:var(--g);color:#06210f">✅ Deal</button>
+    <button data-o="callback" style="background:var(--y);color:#111">📅 Callback</button>
+    <button data-o="no" style="background:var(--r);color:#fff">❌ No</button>
+  </div>
+  <label>Note (optional)<input id="endNote" placeholder="e.g. wants to see it in person"></label>
+</dialog>
+<dialog id="revDlg"><div id="revBody"></div><button class="btn" data-close>Got it</button></dialog>
+<dialog id="statsDlg"><div id="statsBody"></div><button class="btn" id="exportBtn" style="background:#2a241e;color:var(--ink)">⬇️ Export my calls (for team lead)</button><button class="btn" data-close>Close</button></dialog>
 <dialog id="settings">
   <h2 style="font-size:18px">Settings</h2>
   <label>Your name<input id="sName" placeholder="Rithvik"></label>
-  <label>Business you are calling<input id="sBiz" placeholder="Moyaaah"></label>
+  <label>Business you are calling<input id="sBiz" placeholder="e.g. Moyaaah"></label>
   <label>Demo link<input id="sLink" placeholder="https://..."></label>
   <label>Premium price (₹)<input id="sP3" inputmode="numeric"></label>
   <label>Pro price (₹)<input id="sP2" inputmode="numeric"></label>
@@ -112,7 +138,7 @@ body.simple #reply .say{font-size:21px}body.simple #reply .te{font-size:18px}
 
 <script>
 const $ = (s) => document.querySelector(s);
-const DEF = { name: "", biz: "Moyaaah", link: "https://rith-alt.github.io/moyaaah-demo/moyaaah-v2/", p3: 75000, p2: 40000, p1: 20000, min: 15000 };
+const DEF = { name: "", biz: "your restaurant", link: "", p3: 75000, p2: 40000, p1: 20000, min: 15000 };
 let S = DEF;
 try { S = { ...DEF, ...JSON.parse(localStorage.getItem("ch-set") || "{}") }; } catch (e) {}
 const inr = (n) => "₹" + Number(n).toLocaleString("en-IN");
@@ -193,6 +219,7 @@ function classify(text) {
 function show(id, from) {
   const r = R[id];
   if (!r) return;
+  if (CALL) CALL.ev.push({ t: Date.now() - CALL.start, id, heard: !!from });
   $("#rTag").textContent = r.tag + (from ? " · heard" : "");
   $("#rEn").textContent = fill(r.en);
   $("#rTe").textContent = fill(r.te);
@@ -244,7 +271,7 @@ function start() {
     const now = fin || interim;
     const hits = classify(now);
     if (hits.length) { show(hits[0], true); setAlts(hits.slice(1)); }
-    if (fin) addHist(fin, hits[0]);
+    if (fin) { addHist(fin, hits[0]); if (CALL) CALL.lines.push(fin.slice(0, 200)); }
   };
   rec.onerror = (e) => {
     if (e.error === "not-allowed") { warn("Microphone blocked. Allow the mic for this site in Chrome settings."); stop(); }
@@ -265,7 +292,118 @@ function stop() {
   $("#mic").textContent = "🎙️ Start listening";
   if (wake) { wake.release(); wake = null; }
 }
-$("#mic").onclick = () => (listening ? stop() : start());
+$("#mic").onclick = () => { if (!listening) beginCall(); listening ? stop() : start(); };
+document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = () => b.closest("dialog").close()));
+
+/* ================= call memory, review and learning ================= */
+let CALL = null;
+const loadCalls = () => { try { return JSON.parse(localStorage.getItem("ch-calls") || "[]"); } catch (e) { return []; } };
+const saveCalls = (c) => { try { localStorage.setItem("ch-calls", JSON.stringify(c.slice(-300))); } catch (e) {} };
+const esc = (t) => String(t).replace(/[<>&]/g, "");
+function beginCall() {
+  if (CALL) return;
+  CALL = { start: Date.now(), ev: [], lines: [], lang };
+  $("#endCall").style.display = "block";
+  $("#hist").innerHTML = "";
+}
+const OBJ = ["price_high", "lowball", "have_apps", "think", "not_interested", "busy", "relative", "who", "why_website", "how_much", "trust", "payment", "send_details", "updates", "time"];
+
+// score a call against what research says works
+function review(c, past) {
+  const ids = c.ev.map((e) => e.id);
+  const first = (id) => ids.indexOf(id);
+  const objs = [...new Set(c.ev.filter((e) => OBJ.includes(e.id)).map((e) => e.id))];
+  const good = [], bad = [];
+  let score = 40;
+  if (ids[0] === "open") { score += 10; good.push("You opened with the permission opener."); }
+  else bad.push("Start with step 1 (Open): name, reason, ask for 30 seconds. Saying your reason doubles success.");
+  if (first("ask") >= 0) { score += 12; good.push("You asked questions. Owners buy more when they talk more."); }
+  else bad.push("You skipped step 2 (Ask). Ask how many orders come from Zomato/Swiggy, then use his number.");
+  if (first("ask") >= 0 && first("hook") > first("ask")) { score += 8; good.push("You asked before pitching the money."); }
+  if (first("packages") >= 0 && (first("hook") < 0 || first("packages") < first("hook"))) {
+    score -= 10; bad.push("You gave prices before showing the money he saves. Do step 3 (Money) before step 4 (Prices).");
+  } else if (first("packages") >= 0) score += 5;
+  if (objs.length) {
+    score += Math.min(10, objs.length * 3);
+    good.push("You handled " + objs.length + " objection" + (objs.length > 1 ? "s" : "") + ": " + objs.map((o) => LABEL[o]).join(", ") + ".");
+  }
+  const mins = c.dur / 60000;
+  if (c.outcome === "deal") { score += 25; good.push("Deal closed! Send the WhatsApp confirmation (what, price, dates) today."); }
+  else if (c.outcome === "callback") { score += 12; bad.push("Callback: save the exact day and time in your phone now, and send the demo link on WhatsApp."); }
+  else {
+    if (mins < 1) bad.push("Call ended in under a minute. Keep the opener shorter and ask permission early.");
+    if (objs.includes("not_interested")) bad.push("For 'not interested', ask why (enough orders? bad experience?) before giving up. After two noes, end politely.");
+    if (objs.includes("price_high") || objs.includes("lowball")) bad.push("Lost on price. Do the money maths with HIS order numbers before any price, and offer pay-in-parts.");
+    if (!ids.includes("yes")) bad.push("You never asked for the deal. Use step 5 (Close) even if unsure.");
+  }
+  if (c.lines.length === 0) bad.push("The mic heard nothing. Put the call on speaker and keep the helper phone close.");
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const prev = past.slice(-5).map((p) => p.score);
+  const avg = prev.length ? Math.round(prev.reduce((a, b) => a + b, 0) / prev.length) : null;
+  return { score, good, bad, objs, avg };
+}
+
+function endCall(outcome) {
+  if (!CALL) return;
+  stop();
+  CALL.dur = Date.now() - CALL.start;
+  CALL.outcome = outcome;
+  CALL.note = $("#endNote").value.trim();
+  CALL.biz = S.biz;
+  const past = loadCalls();
+  const r = review(CALL, past);
+  CALL.score = r.score;
+  CALL.objs = r.objs;
+  past.push(CALL);
+  saveCalls(past);
+  CALL = null;
+  $("#endCall").style.display = "none";
+  $("#endNote").value = "";
+  $("#endDlg").close();
+  const vs = r.avg === null ? "First call saved. Keep going!"
+    : r.score > r.avg ? "⬆️ Better than your last calls (avg " + r.avg + ")"
+    : r.score < r.avg ? "⬇️ Below your last calls (avg " + r.avg + ")" : "Same as your average (" + r.avg + ")";
+  $("#revBody").innerHTML =
+    '<p class="label" style="margin-top:0">Call review</p><div class="score">' + r.score + '<span style="font-size:20px">/100</span></div>' +
+    '<p style="margin-top:6px;font-weight:700">' + vs + "</p>" +
+    r.good.map((g) => '<div class="tipline good">✅ ' + esc(g) + "</div>").join("") +
+    r.bad.map((b) => '<div class="tipline bad">👉 ' + esc(b) + "</div>").join("");
+  $("#revDlg").showModal();
+}
+$("#endCall").onclick = () => $("#endDlg").showModal();
+document.querySelectorAll("#endDlg .out button").forEach((b) => (b.onclick = () => endCall(b.dataset.o)));
+
+// learning across every call saved on this phone
+function stats() {
+  const c = loadCalls();
+  if (!c.length) return '<h2 style="font-size:18px">My calls</h2><p class="note">No calls yet. Tap Start listening on your next call, then End call &amp; review.</p>';
+  const n = c.length, deals = c.filter((x) => x.outcome === "deal").length, cbs = c.filter((x) => x.outcome === "callback").length;
+  const sc = c.map((x) => x.score || 0), last5 = sc.slice(-5), prev5 = sc.slice(-10, -5);
+  const av = (a) => (a.length ? Math.round(a.reduce((p, q) => p + q, 0) / a.length) : 0);
+  const trend = prev5.length ? (av(last5) > av(prev5) ? "⬆️ improving" : av(last5) < av(prev5) ? "⬇️ dropping" : "➡️ steady") : "trend shows after 10 calls";
+  const per = {};
+  c.forEach((x) => (x.objs || []).forEach((o) => { per[o] = per[o] || { n: 0, win: 0 }; per[o].n++; if (x.outcome !== "no") per[o].win++; }));
+  const rows = Object.entries(per).sort((a, b) => b[1].n - a[1].n).slice(0, 6)
+    .map(([o, v]) => '<div class="tipline ' + (v.win / v.n >= 0.5 ? "good" : "bad") + '">' + LABEL[o] + ": heard " + v.n + "×, kept alive " + Math.round((v.win / v.n) * 100) + "%</div>").join("");
+  const worst = Object.entries(per).filter(([, v]) => v.n >= 2).sort((a, b) => a[1].win / a[1].n - b[1].win / b[1].n)[0];
+  const focus = worst ? '<div class="tipline bad">🎯 Practise most: <b>' + LABEL[worst[0]] + "</b>. You lose the most calls there.</div>" : "";
+  const icon = { deal: "✅", callback: "📅", no: "❌" };
+  const list = c.slice(-8).reverse().map((x) => '<div class="tipline">' + new Date(x.start).toLocaleDateString() + " · " + esc(x.biz || "") + " · " + (icon[x.outcome] || "") + " · score " + x.score +
+    (x.note ? '<br><span style="color:var(--mute)">' + esc(x.note) + "</span>" : "") + "</div>").join("");
+  return '<h2 style="font-size:18px">My calls</h2><div class="grid2"><div class="stat"><b>' + n + '</b>calls</div><div class="stat"><b>' + deals + '</b>deals</div><div class="stat"><b>' + cbs +
+    '</b>callbacks</div><div class="stat"><b>' + Math.round(((deals + cbs) / n) * 100) + "%</b>kept alive</div></div>" +
+    '<p style="margin-top:12px;font-weight:700">Average score ' + av(sc) + " · " + trend + "</p>" + focus +
+    (rows ? '<p class="label">Objections</p>' + rows : "") + '<p class="label">Recent calls</p>' + list;
+}
+$("#statsBtn").onclick = () => { $("#statsBody").innerHTML = stats(); $("#statsDlg").showModal(); };
+$("#exportBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify({ seller: S.name, calls: loadCalls() }, null, 1)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "calls-" + (S.name || "me").replace(/\W+/g, "_") + ".json";
+  a.click();
+};
+
 
 document.querySelectorAll("#lang button").forEach((b) => {
   b.classList.toggle("on", b.dataset.l === lang);
