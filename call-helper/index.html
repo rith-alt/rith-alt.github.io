@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0f0d0b">
+<title>Call Helper</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#0f0d0b;--card:#1c1814;--ink:#fff4de;--mute:#b9ad98;--y:#ffd21f;--r:#e2231a;--g:#3ddc6f}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid #2a241e}
+h1{font-size:20px;letter-spacing:.5px}h1 b{color:var(--y)}
+.wrap{padding:14px 16px 120px;max-width:720px;margin:0 auto}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:flex;background:var(--card);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;color:var(--mute);font-weight:700;padding:7px 12px;border-radius:999px;font-size:13px}
+.seg button.on{background:var(--y);color:#111}
+.icon{border:0;background:var(--card);color:var(--ink);border-radius:999px;width:40px;height:40px;font-size:18px}
+#mic{width:100%;border:0;border-radius:22px;padding:18px;font-size:20px;font-weight:800;background:var(--y);color:#111;margin:12px 0;display:flex;align-items:center;justify-content:center;gap:10px}
+#mic.live{background:var(--r);color:#fff;animation:pulse 1.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(226,35,26,.6)}70%{box-shadow:0 0 0 16px rgba(226,35,26,0)}100%{box-shadow:0 0 0 0 rgba(226,35,26,0)}}
+.label{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin:14px 0 6px}
+#heard{background:var(--card);border-radius:16px;padding:12px 14px;min-height:56px;color:var(--mute);font-size:15px}
+#heard .fin{color:var(--ink)}
+#reply{background:var(--y);color:#111;border-radius:22px;padding:18px;margin-top:6px;transition:transform .2s}
+#reply.pop{transform:scale(1.02)}
+#reply .tag{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;opacity:.7}
+#reply .say{font-size:23px;font-weight:800;line-height:1.3;margin-top:6px}
+#reply .te{font-size:20px;font-weight:700;line-height:1.35;margin-top:10px;padding-top:10px;border-top:2px dashed rgba(0,0,0,.2)}
+#reply .tip{font-size:13px;margin-top:10px;font-weight:600;opacity:.75}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid #3a322a;background:var(--card);color:var(--ink);border-radius:999px;padding:9px 13px;font-size:14px;font-weight:600}
+.chip.alt{border-color:var(--y);color:var(--y)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.steps button{border:0;border-radius:14px;padding:12px 4px;font-weight:800;font-size:13px;background:#2a241e;color:var(--ink)}
+.steps button.close{background:var(--g);color:#06210f}
+dialog{border:0;border-radius:20px;background:var(--card);color:var(--ink);padding:18px;width:min(92vw,460px);margin:auto}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+dialog label{display:block;font-size:13px;color:var(--mute);margin-top:10px}
+dialog input{width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a;background:var(--bg);color:var(--ink);font-size:16px;margin-top:4px}
+.btn{border:0;border-radius:14px;padding:12px 16px;font-weight:800;background:var(--y);color:#111;margin-top:14px;width:100%;font-size:16px}
+.note{font-size:13px;color:var(--mute);margin-top:8px}
+.warn{background:#3a1512;color:#ffb4ad;border-radius:14px;padding:10px 12px;font-size:14px;margin-top:10px;display:none}
+#hist .h{background:var(--card);border-radius:12px;padding:8px 12px;margin-top:6px;font-size:14px;color:var(--mute)}
+</style>
+</head>
+<body>
+<header>
+  <h1>📞 Call <b>Helper</b></h1>
+  <div class="row">
+    <div class="seg" id="lang"><button data-l="en-IN" class="on">EN</button><button data-l="te-IN">తెలుగు</button></div>
+    <button class="icon" id="setBtn" aria-label="Settings">⚙️</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="warn" id="warn"></div>
+  <button id="mic">🎙️ Start listening</button>
+  <p class="note">Call on <b>speaker</b> on your phone. Open this app on a <b>second phone or laptop</b> next to it. Choose EN or తెలుగు to match what the owner speaks.</p>
+
+  <div class="label">They said</div>
+  <div id="heard">…waiting</div>
+
+  <div class="label">Say this ↓</div>
+  <div id="reply">
+    <div class="tag" id="rTag">Start of call</div>
+    <div class="say" id="rEn"></div>
+    <div class="te" id="rTe"></div>
+    <div class="tip" id="rTip"></div>
+  </div>
+
+  <div class="label">Or maybe</div>
+  <div class="chips" id="alts"></div>
+
+  <div class="label">Call steps</div>
+  <div class="steps">
+    <button data-i="open">1 Open</button>
+    <button data-i="hook">2 Money</button>
+    <button data-i="packages">3 Prices</button>
+    <button data-i="yes" class="close">4 Close</button>
+  </div>
+
+  <div class="label">Tap what they said (if the mic missed it)</div>
+  <div class="chips" id="manual"></div>
+
+  <div class="label">This call</div>
+  <div id="hist"></div>
+</div>
+
+<dialog id="settings">
+  <h2 style="font-size:18px">Settings</h2>
+  <label>Your name<input id="sName" placeholder="Rithvik"></label>
+  <label>Business you are calling<input id="sBiz" placeholder="Moyaaah"></label>
+  <label>Demo link<input id="sLink" placeholder="https://..."></label>
+  <label>Premium price (₹)<input id="sP3" inputmode="numeric"></label>
+  <label>Pro price (₹)<input id="sP2" inputmode="numeric"></label>
+  <label>Basic price (₹)<input id="sP1" inputmode="numeric"></label>
+  <label>Lowest you accept (₹)<input id="sMin" inputmode="numeric"></label>
+  <button class="btn" id="save">Save</button>
+  <p class="note">Saved on this phone only. Each team member sets their own name.</p>
+</dialog>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const DEF = { name: "", biz: "Moyaaah", link: "https://rith-alt.github.io/moyaaah-demo/moyaaah-v2/", p3: 75000, p2: 40000, p1: 20000, min: 15000 };
+let S = DEF;
+try { S = { ...DEF, ...JSON.parse(localStorage.getItem("ch-set") || "{}") }; } catch (e) {}
+const inr = (n) => "₹" + Number(n).toLocaleString("en-IN");
+const fill = (t) => t.replace(/\{name\}/g, S.name || "I").replace(/\{biz\}/g, S.biz).replace(/\{p3\}/g, inr(S.p3)).replace(/\{p2\}/g, inr(S.p2)).replace(/\{p1\}/g, inr(S.p1)).replace(/\{min\}/g, inr(S.min)).replace(/\{link\}/g, S.link);
+
+/* ---------- replies: English + Telugu (as spoken in Hyderabad) ---------- */
+const R = {
+  open: { tag: "Opening", en: "Hi sir, this is {name}. I already made a website for {biz}, it's ready and free to look at. Can I send the link on WhatsApp?", te: "Namaskaram sir, nenu {name}. {biz} kosam oka website already ready chesanu, chudataniki free. WhatsApp lo link pampana?", tip: "Smile while you talk. Keep it under 15 seconds." },
+  hook: { tag: "Money hook", en: "Sir, Zomato and Swiggy take around 20 to 30 percent on every order. With your own website people order directly on WhatsApp, zero commission. Just 3 orders a day saves you about ten thousand a month.", te: "Sir, Zomato Swiggy prathi order meeda 20-30 percent teeskuntaru. Mee own website tho direct WhatsApp lo order vastundi, commission zero. Roju 3 orders vachina, nelaki dadapu padi velu save avtundi.", tip: "Pause after 'ten thousand a month'. Let it sink in." },
+  packages: { tag: "Prices (big first)", en: "We have three options. Premium is {p3} with a full year of updates. Most people take Pro at {p2}. Basic is {p1}. And you can pay in parts.", te: "Moodu options unnayi sir. Premium {p3}, full year updates tho. Ekkuva mandi Pro teeskuntaru, {p2}. Basic {p1}. Installments lo kuda pay cheyochu.", tip: "Always say Premium first. Then stop talking." },
+  yes: { tag: "Close the deal", en: "Great sir! I'll put it live on your own domain this week. Fifty percent now and the rest on launch day. Shall I send the details on WhatsApp?", te: "Super sir! Ee week lone mee own domain lo live chestanu. Ippudu 50 percent, migathadi launch roju. Details WhatsApp lo pampana?", tip: "Confirm everything in one WhatsApp message after the call." },
+  price_high: { tag: "Too expensive", en: "I understand sir. Think of it this way: it pays for itself from the commission you save. And I can do Basic at {p1}, or split Pro into small monthly payments.", te: "Artham ayyindi sir. Commission save ayyedi tho idi mee daggara nunchi kharchu kaadu, adhe recover avtundi. Basic {p1} ki chestanu, leda Pro ni chinna monthly payments lo cheyochu.", tip: "Never drop the price without removing something." },
+  lowball: { tag: "Very low offer", en: "Sir, the domain and setup alone cost more than that. My lowest is {min}, and only if you post one Instagram reel tagging me.", te: "Sir, domain inka setup ke anthakante ekkuva avtundi. Na lowest {min}, adi kuda meeru Instagram lo okka reel lo nannu tag chesthe.", tip: "Then stay quiet. Let him answer first." },
+  have_apps: { tag: "Already on Zomato / Instagram", en: "That's great sir, keep them. But those are rented. Zomato takes a cut on every order. A website is yours, no cut, and people find you on Google.", te: "Manchidhe sir, avi alage unchandi. Kani avi rent laantivi, Zomato prathi order ki cut teeskuntundi. Website mee sontham, cut ledu, Google lo kuda kanipistaru.", tip: "" },
+  think: { tag: "Let me think", en: "Of course sir. I'll send the link now so you can try it. I can hold this price till Sunday, after that it goes back to normal.", te: "Sare sir, thappakunda. Ippude link pampistanu, try cheyandi. Ee price Sunday varaku hold chestanu, tarvatha normal price.", tip: "Ask: 'Shall I call you Saturday at 4?'" },
+  not_interested: { tag: "Not interested", en: "No problem sir. Just one look, it's already built for {biz}, it takes two minutes. If you don't like it, I won't disturb you again.", te: "Parledu sir. Okkasari chudandi chalu, {biz} kosam already ready ga undi, rendu nimishalu. Nachakapothe malli disturb cheyanu.", tip: "If he says no twice, thank him and end politely." },
+  busy: { tag: "Busy now", en: "Sorry sir, I'll be quick. Can I send the link on WhatsApp and call you back at a better time, maybe 4 PM?", te: "Sorry sir, short ga chepta. WhatsApp lo link pampi, meeku free unnappudu call cheyana? Saayantram 4 ki okay na?", tip: "3 to 5 PM is the best time for restaurants." },
+  relative: { tag: "Someone else can make it", en: "Sure sir. But can they make this? Open the link and try the burger builder and the slot machine. This is a custom build, not a template.", te: "Sare sir. Kani idi cheyagalara? Link open chesi burger builder, slot machine try cheyandi. Idi custom ga chesindi, template kaadu.", tip: "Show, don't argue." },
+  who: { tag: "Who are you?", en: "Sir, I'm {name}, I build websites for restaurants in Hyderabad. I liked your reels on Instagram, so I made a demo site for {biz} first.", te: "Sir, nenu {name}, Hyderabad lo restaurants ki websites chestanu. Mee Instagram reels nachayi, anduke mundu {biz} kosam demo website chesanu.", tip: "" },
+  why_website: { tag: "Why do I need a website?", en: "Three reasons sir: direct orders with no commission, people find you on Google when they search best burger in Banjara Hills, and table bookings come straight to you.", te: "Moodu reasons sir: commission lekunda direct orders, Google lo 'best burger Banjara Hills' ani search chesthe meeru kanipistaru, inka table bookings direct ga meeke vastayi.", tip: "" },
+  send_details: { tag: "Send details", en: "Sure sir, sending the link on WhatsApp right now: it's the site I made for {biz}. Try it on your phone and I'll call you tomorrow.", te: "Sare sir, ippude WhatsApp lo link pamputhunna, {biz} kosam chesina site. Mee phone lo try cheyandi, repu call chestanu.", tip: "Send: {link}" },
+  payment: { tag: "Payment / advance", en: "Very simple sir: fifty percent to start, the rest only when it's live on your domain. Or pay in small monthly parts.", te: "Chala simple sir: start cheyadaniki 50 percent, migathadi mee domain lo live ayyaka matrame. Leda chinna monthly installments lo.", tip: "" },
+  trust: { tag: "Is this real / trust", en: "Totally fair sir. You've already seen the site, it's live. You pay the rest only after it's live on your own domain. No risk.", te: "Correct ga adigaru sir. Site already live lo chusaru. Mee domain lo live ayyake migathadi pay cheyandi. Risk emi ledu.", tip: "" },
+  updates: { tag: "Changes later?", en: "Yes sir, prices and new burgers can be changed anytime. Pro includes three months of updates, Premium a full year.", te: "Avunu sir, prices, kotha burgers eppudaina marchochu. Pro lo moodu nelalu updates, Premium lo full year.", tip: "" },
+  time: { tag: "How long?", en: "Very fast sir. The site is already built. Your own domain can be live in two to three days.", te: "Chala fast sir. Site already ready. Mee own domain lo rendu moodu rojullo live chestanu.", tip: "" },
+};
+
+/* words that point to each situation (English, Telugu script, and Telugu typed in English) */
+const K = {
+  price_high: ["expensive", "costly", "too much", "high", "price", "rate", "budget", "discount", "reduce", "less", "cheap", "ekkuva", "ekuva", "thaggi", "taggi", "ఎక్కువ", "ధర", "రేటు", "తగ్గించ", "తగ్గి", "డిస్కౌంట్", "బడ్జెట్"],
+  have_apps: ["zomato", "swiggy", "instagram", "already have", "already on", "facebook", "జొమాటో", "స్విగ్గీ", "ఇన్‌స్టాగ్రామ్", "ఇన్స్టాగ్రామ్", "ఉంది కదా"],
+  think: ["think", "later", "tomorrow", "next week", "consider", "decide", "partner", "alochis", "aalochis", "chepta", "ఆలోచి", "తర్వాత", "రేపు", "చెప్తా", "చూద్దాం"],
+  not_interested: ["not interested", "no need", "don't need", "dont need", "not required", "no thanks", "vaddu", "avasaram ledu", "వద్దు", "అవసరం లేదు", "ఇంట్రెస్ట్ లేదు"],
+  busy: ["busy", "call later", "meeting", "driving", "not now", "ippudu kaadu", "బిజీ", "ఇప్పుడు కాదు", "తర్వాత కాల్"],
+  relative: ["nephew", "son", "friend", "cousin", "brother", "my guy", "someone", "myself", "free website", "తమ్ముడు", "అబ్బాయి", "ఫ్రెండ్", "మా వాడు", "కొడుకు"],
+  who: ["who are you", "who is this", "which company", "how did you get", "number", "evaru", "ఎవరు", "ఏ కంపెనీ", "నంబర్"],
+  why_website: ["why", "what use", "benefit", "need a website", "why website", "use enti", "enduku", "ఎందుకు", "ఉపయోగం", "లాభం"],
+  send_details: ["send", "whatsapp", "details", "share", "link", "pampu", "పంపు", "పంపండి", "వాట్సాప్", "డీటెయిల్స్"],
+  payment: ["advance", "payment", "pay", "installment", "emi", "upfront", "money first", "పేమెంట్", "అడ్వాన్స్", "డబ్బులు"],
+  trust: ["fake", "scam", "fraud", "trust", "guarantee", "real", "sure", "నమ్మకం", "గ్యారెంటీ", "మోసం"],
+  updates: ["change", "update", "edit", "new item", "modify", "maintenance", "మార్చ", "అప్డేట్", "మార్పు"],
+  time: ["how long", "how many days", "when", "time", "ready", "enni rojulu", "ఎన్ని రోజులు", "ఎప్పుడు", "టైం"],
+  yes: ["okay", "ok", "deal", "done", "let's do", "lets do", "go ahead", "interested", "fine", "sare", "సరే", "ఓకే", "చేయండి", "చెయ్యండి"],
+};
+const LABEL = { price_high: "Too expensive", lowball: "Very low offer", have_apps: "Have Zomato/Insta", think: "Let me think", not_interested: "Not interested", busy: "Busy", relative: "Someone else will make", who: "Who are you", why_website: "Why website", send_details: "Send details", payment: "Payment", trust: "Trust", updates: "Changes later", time: "How long", yes: "Yes / OK" };
+
+/* a low number like 5k / 5000 / ఐదు వేలు means a lowball offer */
+function lowNumber(t) {
+  const m = t.replace(/,/g, "").match(/(\d+(?:\.\d+)?)\s*(k|thousand|వేల|వేలు)?/g) || [];
+  for (const s of m) {
+    let n = parseFloat(s);
+    if (/k|thousand|వేల/.test(s)) n *= 1000;
+    if (n >= 1000 && n < S.min) return true;
+  }
+  return /(ఐదు|పది|five|ten)\s*(వేల|thousand|k)/.test(t);
+}
+
+function classify(text) {
+  const t = text.toLowerCase();
+  const scores = [];
+  if (lowNumber(t)) scores.push(["lowball", 5]);
+  for (const [k, words] of Object.entries(K)) {
+    let s = 0;
+    for (const w of words) {
+      // short English words must match whole words ("ok" should not match "book")
+      const hit = /^[a-z' ]{1,5}$/.test(w) ? new RegExp("(^|[^a-z])" + w + "([^a-z]|$)").test(t) : t.includes(w);
+      if (hit) s += w.length > 4 ? 2 : 1;
+    }
+    if (s) scores.push([k, s]);
+  }
+  scores.sort((a, b) => b[1] - a[1]);
+  return scores.map((x) => x[0]);
+}
+
+function show(id, from) {
+  const r = R[id];
+  if (!r) return;
+  $("#rTag").textContent = r.tag + (from ? " · heard" : "");
+  $("#rEn").textContent = fill(r.en);
+  $("#rTe").textContent = fill(r.te);
+  $("#rTip").textContent = r.tip ? "💡 " + fill(r.tip) : "";
+  const el = $("#reply");
+  el.classList.add("pop");
+  setTimeout(() => el.classList.remove("pop"), 200);
+  if (navigator.vibrate) navigator.vibrate(40);
+}
+
+function setAlts(list) {
+  const box = $("#alts");
+  box.innerHTML = "";
+  list.slice(0, 3).forEach((id) => {
+    const b = document.createElement("button");
+    b.className = "chip alt";
+    b.textContent = LABEL[id] || R[id].tag;
+    b.onclick = () => show(id);
+    box.appendChild(b);
+  });
+}
+
+function addHist(text, id) {
+  const h = document.createElement("div");
+  h.className = "h";
+  h.textContent = "“" + text.slice(0, 90) + "” → " + (id ? (LABEL[id] || R[id].tag) : "no match");
+  $("#hist").prepend(h);
+}
+
+/* ---------- live listening (free speech recognition built into Chrome) ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, listening = false, lang = localStorage.getItem("ch-lang") || "en-IN", wake = null;
+
+function warn(msg) { const w = $("#warn"); w.textContent = msg; w.style.display = msg ? "block" : "none"; }
+
+function start() {
+  if (!SR) return warn("This browser can't listen. Open this link in Google Chrome (Android or laptop). iPhone Safari is not supported yet.");
+  rec = new SR();
+  rec.lang = lang;
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.onresult = (e) => {
+    let fin = "", interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const tx = e.results[i][0].transcript;
+      if (e.results[i].isFinal) fin += tx; else interim += tx;
+    }
+    $("#heard").innerHTML = (fin ? '<span class="fin">' + fin.replace(/</g, "") + "</span> " : "") + interim.replace(/</g, "");
+    const now = fin || interim;
+    const hits = classify(now);
+    if (hits.length) { show(hits[0], true); setAlts(hits.slice(1)); }
+    if (fin) addHist(fin, hits[0]);
+  };
+  rec.onerror = (e) => {
+    if (e.error === "not-allowed") { warn("Microphone blocked. Allow the mic for this site in Chrome settings."); stop(); }
+    else if (e.error === "network") warn("Needs internet to listen.");
+  };
+  rec.onend = () => { if (listening) try { rec.start(); } catch (e) {} };
+  try { rec.start(); } catch (e) {}
+  listening = true;
+  warn("");
+  $("#mic").classList.add("live");
+  $("#mic").textContent = "⏹️ Listening… tap to stop";
+  if ("wakeLock" in navigator) navigator.wakeLock.request("screen").then((w) => (wake = w)).catch(() => {});
+}
+function stop() {
+  listening = false;
+  if (rec) try { rec.stop(); } catch (e) {}
+  $("#mic").classList.remove("live");
+  $("#mic").textContent = "🎙️ Start listening";
+  if (wake) { wake.release(); wake = null; }
+}
+$("#mic").onclick = () => (listening ? stop() : start());
+
+document.querySelectorAll("#lang button").forEach((b) => {
+  b.classList.toggle("on", b.dataset.l === lang);
+  b.onclick = () => {
+    lang = b.dataset.l;
+    try { localStorage.setItem("ch-lang", lang); } catch (e) {}
+    document.querySelectorAll("#lang button").forEach((x) => x.classList.toggle("on", x === b));
+    if (listening) { stop(); start(); }
+  };
+});
+
+document.querySelectorAll(".steps button").forEach((b) => (b.onclick = () => show(b.dataset.i)));
+const man = $("#manual");
+Object.keys(LABEL).filter((k) => k !== "yes").forEach((id) => {
+  const b = document.createElement("button");
+  b.className = "chip";
+  b.textContent = LABEL[id];
+  b.onclick = () => show(id);
+  man.appendChild(b);
+});
+
+/* ---------- settings ---------- */
+const F = { name: "#sName", biz: "#sBiz", link: "#sLink", p3: "#sP3", p2: "#sP2", p1: "#sP1", min: "#sMin" };
+$("#setBtn").onclick = () => { for (const k in F) $(F[k]).value = S[k]; $("#settings").showModal(); };
+$("#save").onclick = () => {
+  for (const k in F) S[k] = /^p|min/.test(k) ? Number($(F[k]).value) || DEF[k] : $(F[k]).value.trim() || DEF[k];
+  try { localStorage.setItem("ch-set", JSON.stringify(S)); } catch (e) {}
+  $("#settings").close();
+  show("open");
+};
+
+show("open");
+if (!S.name) setTimeout(() => $("#setBtn").click(), 400);
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
