@@ -70,7 +70,7 @@ dialog{max-height:88vh;overflow:auto}
 <header>
   <h1>📞 Call <b>Helper</b></h1>
   <div class="row">
-    <div class="seg" id="lang"><button data-l="en-IN" class="on">EN</button><button data-l="te-IN">తెలుగు</button></div>
+    <div class="seg" id="lang"><button data-l="en-IN" class="on">EN</button><button data-l="te-IN">తెలుగు</button><button data-l="hi-IN">हिंदी</button></div>
     <button class="icon" id="voiceBtn" aria-label="Voice replies on or off">🔊</button>
     <button class="icon" id="setBtn" aria-label="Settings">⚙️</button>
   </div>
@@ -78,9 +78,10 @@ dialog{max-height:88vh;overflow:auto}
 
 <div class="wrap">
   <div class="warn" id="warn"></div>
+  <button id="langHint" style="display:none;width:100%;border:0;border-radius:16px;padding:14px;margin-top:10px;font-weight:800;font-size:16px;background:var(--g);color:#06210f"></button>
   <div class="row" id="voiceRow" style="justify-content:space-between;margin-top:4px">
-    <span style="font-size:13px;color:var(--mute)">🎧 Voice reads the reply in your earphones</span>
-    <div class="seg" id="sayLang"><button data-v="en">Say EN</button><button data-v="te">Say తెలుగు</button></div>
+    <span style="font-size:13px;color:var(--mute)">🎧 Voice reads the reply in your earphones. Every call starts in English.</span>
+    
   </div>
   <button id="mic">🎙️ Start listening</button>
   <div class="callbar"><button id="endCall">✅ End call &amp; review</button><button id="statsBtn">📊 My calls</button></div>
@@ -173,23 +174,48 @@ const R = {
   time: { tag: "How long?", en: "Very fast sir. The site is already built. Your own domain can be live in two to three days.", te: "Chala fast sir. Site already ready. Mee own domain lo rendu moodu rojullo live chestanu.", tip: "" },
 };
 
+const HI = {
+  open: "Namaste sir, main {name} bol raha hoon. Pata hai achanak call kiya hai. Maine {biz} ke liye ek website already bana di hai. 30 second mein bataun kyun call kiya, phir aap decide kariye?",
+  ask: "Ek chhota sa sawaal sir: roz lagbhag kitne orders Zomato aur Swiggy se aate hain? Table booking phone pe hoti hai ya Zomato pe?",
+  hook: "Sir, Zomato Swiggy har order pe 20-30 percent lete hain. Apni website se log seedha WhatsApp pe order karenge, commission zero. Roz sirf 3 order bhi aaye toh mahine ke lagbhag das hazaar bachenge.",
+  packages: "Teen options hain sir. Premium {p3}, poore saal ke updates ke saath. Zyada log Pro lete hain, {p2}. Basic {p1}. Aur installments mein bhi de sakte hain.",
+  yes: "Badhiya sir! Isi hafte aapke apne domain pe live kar dunga. Abhi 50 percent, baaki launch ke din. Details WhatsApp pe bhej doon?",
+  price_high: "Sahi sawaal sir, kis ke mukable? Jo commission aap har mahine Zomato ko dete ho, usi se yeh wapas aa jayega. Basic {p1} mein kar dunga, ya Pro ko chhoti monthly kishton mein.",
+  lowball: "Sir, domain aur setup hi usse zyada ka padta hai. Mera sabse kam {min} hai, woh bhi agar aap ek Instagram reel mein mujhe tag karein.",
+  have_apps: "Bahut achha sir, woh rakhiye. Par woh kiraye jaise hain, Zomato har order pe cut leta hai. Website aapki apni hai, koi cut nahi, aur Google pe bhi dikhenge.",
+  think: "Bilkul sir. Abhi link bhejta hoon, try kariye. Yeh price Sunday tak hold karta hoon, uske baad normal price.",
+  not_interested: "Koi baat nahi sir. Ek baat poochhun, orders already kaafi aate hain ya pehle website se fayda nahi hua? Bas ek baar dekh lijiye, {biz} ke liye ready hai, do minute lagenge.",
+  busy: "Sorry sir, jaldi bolta hoon. WhatsApp pe link bhej ke baad mein call karun? Shaam 4 baje theek rahega?",
+  relative: "Zaroor sir. Par kya woh yeh bana sakte hain? Link kholke burger builder aur slot machine try kariye. Yeh custom bana hai, template nahi.",
+  who: "Sir, main {name}, Hyderabad mein restaurants ki websites banata hoon. Aapke Instagram reels achhe lage, isliye pehle {biz} ke liye demo bana diya.",
+  why_website: "Teen wajah sir: bina commission ke direct orders, Google pe 'best burger Banjara Hills' search karne pe aap dikhenge, aur table booking seedha aapko.",
+  send_details: "Haan sir, abhi WhatsApp pe bhejta hoon. Sahi info bhejne ke liye ek sawaal: aapke liye zyada zaroori kya hai, direct orders ya table bookings? Kal 4 baje call karke aapki raay poochhunga, theek hai?",
+  payment: "Bahut simple sir: shuru karne ke liye 50 percent, baaki tab jab aapke domain pe live ho jaye. Ya chhoti monthly kishton mein.",
+  trust: "Bilkul sahi sawaal sir. Site aapne live dekh li hai. Aapke domain pe live hone ke baad hi baaki paisa dijiye. Koi risk nahi.",
+  updates: "Haan sir, price aur naye burger kabhi bhi badal sakte hain. Pro mein teen mahine updates, Premium mein poora saal.",
+  time: "Bahut jaldi sir. Site already ready hai. Aapke apne domain pe do teen din mein live.",
+  how_much: "Aapko kya chahiye uspe depend karta hai sir. Pehle {biz} ke liye bani site dekhiye. Phir teen options bataunga, chhote se shuru. Abhi link bhejoon?",
+};
+for (const k in HI) if (R[k]) R[k].hi = HI[k];
+R.open.tip = "If they answer in Telugu or Hindi, tap తెలుగు or हिंदी at the top. Never ask 'is this a bad time?'.";
+
 /* words that point to each situation (English, Telugu script, and Telugu typed in English) */
 const K = {
-  price_high: ["expensive", "costly", "too much", "high", "budget", "discount", "reduce", "less", "cheap", "ekkuva", "ekuva", "thaggi", "taggi", "ఎక్కువ", "ధర", "రేటు", "తగ్గించ", "తగ్గి", "డిస్కౌంట్", "బడ్జెట్"],
-  have_apps: ["zomato", "swiggy", "instagram", "already have", "already on", "facebook", "జొమాటో", "స్విగ్గీ", "ఇన్‌స్టాగ్రామ్", "ఇన్స్టాగ్రామ్", "ఉంది కదా"],
-  think: ["think", "later", "tomorrow", "next week", "consider", "decide", "partner", "alochis", "aalochis", "chepta", "ఆలోచి", "తర్వాత", "రేపు", "చెప్తా", "చూద్దాం"],
-  not_interested: ["not interested", "no need", "don't need", "dont need", "not required", "no thanks", "vaddu", "avasaram ledu", "వద్దు", "అవసరం లేదు", "ఇంట్రెస్ట్ లేదు"],
-  busy: ["busy", "call later", "meeting", "driving", "not now", "ippudu kaadu", "బిజీ", "ఇప్పుడు కాదు", "తర్వాత కాల్"],
+  price_high: ["mehenga", "mahanga", "bahut zyada", "महंगा", "ज़्यादा", "ज्यादा", "कम करो", "कम कीजिए", "expensive", "costly", "too much", "high", "budget", "discount", "reduce", "less", "cheap", "ekkuva", "ekuva", "thaggi", "taggi", "ఎక్కువ", "ధర", "రేటు", "తగ్గించ", "తగ్గి", "డిస్కౌంట్", "బడ్జెట్"],
+  have_apps: ["pehle se hai", "पहले से", "ज़ोमैटो", "जोमैटो", "स्विगी", "zomato", "swiggy", "instagram", "already have", "already on", "facebook", "జొమాటో", "స్విగ్గీ", "ఇన్‌స్టాగ్రామ్", "ఇన్స్టాగ్రామ్", "ఉంది కదా"],
+  think: ["soch ke", "sochta", "baad mein", "कल", "सोच", "बाद में", "बताऊंगा", "बताता हूं", "think", "later", "tomorrow", "next week", "consider", "decide", "partner", "alochis", "aalochis", "chepta", "ఆలోచి", "తర్వాత", "రేపు", "చెప్తా", "చూద్దాం"],
+  not_interested: ["nahi chahiye", "zaroorat nahi", "नहीं चाहिए", "ज़रूरत नहीं", "जरूरत नहीं", "not interested", "no need", "don't need", "dont need", "not required", "no thanks", "vaddu", "avasaram ledu", "వద్దు", "అవసరం లేదు", "ఇంట్రెస్ట్ లేదు"],
+  busy: ["abhi nahi", "अभी नहीं", "व्यस्त", "busy", "call later", "meeting", "driving", "not now", "ippudu kaadu", "బిజీ", "ఇప్పుడు కాదు", "తర్వాత కాల్"],
   relative: ["nephew", "son", "friend", "cousin", "brother", "my guy", "someone", "myself", "free website", "తమ్ముడు", "అబ్బాయి", "ఫ్రెండ్", "మా వాడు", "కొడుకు"],
-  who: ["who are you", "who is this", "which company", "how did you get", "number", "evaru", "ఎవరు", "ఏ కంపెనీ", "నంబర్"],
-  why_website: ["why", "what use", "benefit", "need a website", "why website", "use enti", "enduku", "ఎందుకు", "ఉపయోగం", "లాభం"],
-  send_details: ["send", "whatsapp", "details", "share", "link", "pampu", "పంపు", "పంపండి", "వాట్సాప్", "డీటెయిల్స్"],
+  who: ["kaun", "कौन", "कहां से", "who are you", "who is this", "which company", "how did you get", "number", "evaru", "ఎవరు", "ఏ కంపెనీ", "నంబర్"],
+  why_website: ["kyun", "क्यों", "फायदा", "फ़ायदा", "why", "what use", "benefit", "need a website", "why website", "use enti", "enduku", "ఎందుకు", "ఉపయోగం", "లాభం"],
+  send_details: ["bhejo", "bhej do", "भेजो", "भेज दो", "भेजिए", "send", "whatsapp", "details", "share", "link", "pampu", "పంపు", "పంపండి", "వాట్సాప్", "డీటెయిల్స్"],
   payment: ["advance", "payment", "pay", "installment", "emi", "upfront", "money first", "పేమెంట్", "అడ్వాన్స్", "డబ్బులు"],
-  trust: ["fake", "scam", "fraud", "trust", "guarantee", "real", "sure", "నమ్మకం", "గ్యారెంటీ", "మోసం"],
+  trust: ["dhokha", "bharosa", "धोखा", "भरोसा", "fake", "scam", "fraud", "trust", "guarantee", "real", "sure", "నమ్మకం", "గ్యారెంటీ", "మోసం"],
   updates: ["change", "update", "edit", "menu", "add burger", "new burger", "new item", "modify", "maintenance", "మార్చ", "అప్డేట్", "మార్పు"],
-  how_much: ["how much", "what is the price", "what's the price", "your price", "price enti", "charges", "what is the cost", "what's the cost", "cost enta", "entha avutundi", "price enta", "rate enta", "ఎంత", "ఖర్చు ఎంత", "రేటు ఎంత"],
-  time: ["how long", "how many days", "when", "time", "ready", "enni rojulu", "ఎన్ని రోజులు", "ఎప్పుడు", "టైం"],
-  yes: ["okay", "ok", "deal", "done", "let's do", "lets do", "go ahead", "interested", "fine", "sare", "సరే", "ఓకే", "చేయండి", "చెయ్యండి"],
+  how_much: ["kitna", "kitne ka", "कितना", "कितने का", "how much", "what is the price", "what's the price", "your price", "price enti", "charges", "what is the cost", "what's the cost", "cost enta", "entha avutundi", "price enta", "rate enta", "ఎంత", "ఖర్చు ఎంత", "రేటు ఎంత"],
+  time: ["kitne din", "कितने दिन", "कब तक", "how long", "how many days", "when", "time", "ready", "enni rojulu", "ఎన్ని రోజులు", "ఎప్పుడు", "టైం"],
+  yes: ["theek hai", "chalo", "ठीक है", "चलो", "हाँ करो", "कर दो", "okay", "ok", "deal", "done", "let's do", "lets do", "go ahead", "interested", "fine", "sare", "సరే", "ఓకే", "చేయండి", "చెయ్యండి"],
 };
 const LABEL = { price_high: "Too expensive", lowball: "Very low offer", have_apps: "Have Zomato/Insta", think: "Let me think", not_interested: "Not interested", busy: "Busy", relative: "Someone else will make", who: "Who are you", why_website: "Why website", send_details: "Send details", payment: "Payment", trust: "Trust", updates: "Changes later", time: "How long", yes: "Yes / OK", how_much: "How much?" };
 
@@ -226,10 +252,14 @@ function show(id, from) {
   if (!r) return;
   if (CALL) CALL.ev.push({ t: Date.now() - CALL.start, id, heard: !!from });
   $("#rTag").textContent = r.tag + (from ? " · heard" : "");
-  $("#rEn").textContent = fill(r.en);
-  $("#rTe").textContent = fill(r.te);
+  CUR = id;
+  const L = lang === "te-IN" ? "te" : lang === "hi-IN" ? "hi" : "en";
+  const main = fill(r[L] || r.en);
+  $("#rEn").textContent = main;
+  $("#rTe").textContent = L === "en" ? "" : fill(r.en);
+  $("#rTe").style.display = L === "en" ? "none" : "block";
   $("#rTip").textContent = r.tip ? "💡 " + fill(r.tip) : "";
-  speak(fill(VOICE.lang === "te" ? r.te : r.en));
+  speak(main);
   const el = $("#reply");
   el.classList.add("pop");
   setTimeout(() => el.classList.remove("pop"), 200);
@@ -290,7 +320,7 @@ paintVoice();
 
 /* ---------- live listening (free speech recognition built into Chrome) ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null, listening = false, lang = localStorage.getItem("ch-lang") || "en-IN", wake = null;
+let rec = null, listening = false, lang = "en-IN", wake = null, CUR = "open";
 
 function warn(msg) { const w = $("#warn"); w.textContent = msg; w.style.display = msg ? "block" : "none"; }
 
@@ -308,6 +338,12 @@ function start() {
     }
     $("#heard").innerHTML = (fin ? '<span class="fin">' + fin.replace(/</g, "") + "</span> " : "") + interim.replace(/</g, "");
     const now = fin || interim;
+    if (lang === "en-IN") {
+      const t = " " + now.toLowerCase() + " ";
+      const te = /[\u0C00-\u0C7F]| (ledu|ledhu|cheppandi|chepandi|enti|avunu|kaadu|kavali|undi|emiti|meeru|nenu|sare|andi) /.test(t);
+      const hi = /[\u0900-\u097F]| (haan|nahi|nahin|kya|kitna|kitne|bhai|accha|achha|theek|bolo|boliye|hai|chahiye|aap) /.test(t);
+      if (te || hi) setHint(te ? "te-IN" : "hi-IN");
+    }
     const hits = classify(now);
     if (hits.length) { show(hits[0], true); setAlts(hits.slice(1)); }
     if (fin) { addHist(fin, hits[0]); if (CALL) CALL.lines.push(fin.slice(0, 200)); }
@@ -323,6 +359,20 @@ function start() {
   $("#mic").classList.add("live");
   $("#mic").textContent = "⏹️ Listening… tap to stop";
   if ("wakeLock" in navigator) navigator.wakeLock.request("screen").then((w) => (wake = w)).catch(() => {});
+}
+function setHint(code) {
+  const h = $("#langHint");
+  h.dataset.l = code;
+  h.textContent = code === "te-IN" ? "🗣️ Speaking Telugu? Tap to switch to తెలుగు" : "🗣️ Speaking Hindi? Tap to switch to हिंदी";
+  h.style.display = "block";
+}
+function setLang(code) {
+  lang = code;
+  document.querySelectorAll("#lang button").forEach((x) => x.classList.toggle("on", x.dataset.l === code));
+  $("#langHint").style.display = "none";
+  lastSaid = "";
+  if (listening) { stop(); start(); }
+  show(CUR);
 }
 function stop() {
   listening = false;
@@ -341,7 +391,8 @@ const saveCalls = (c) => { try { localStorage.setItem("ch-calls", JSON.stringify
 const esc = (t) => String(t).replace(/[<>&]/g, "");
 function beginCall() {
   if (CALL) return;
-  CALL = { start: Date.now(), ev: [], lines: [], lang };
+  if (lang !== "en-IN") setLang("en-IN");
+  CALL = { start: Date.now(), ev: [], lines: [], lang: "en-IN" };
   $("#endCall").style.display = "block";
   $("#hist").innerHTML = "";
 }
@@ -444,15 +495,8 @@ $("#exportBtn").onclick = () => {
 };
 
 
-document.querySelectorAll("#lang button").forEach((b) => {
-  b.classList.toggle("on", b.dataset.l === lang);
-  b.onclick = () => {
-    lang = b.dataset.l;
-    try { localStorage.setItem("ch-lang", lang); } catch (e) {}
-    document.querySelectorAll("#lang button").forEach((x) => x.classList.toggle("on", x === b));
-    if (listening) { stop(); start(); }
-  };
-});
+document.querySelectorAll("#lang button").forEach((b) => (b.onclick = () => setLang(b.dataset.l)));
+$("#langHint").onclick = () => setLang($("#langHint").dataset.l);
 
 document.querySelectorAll(".steps button").forEach((b) => (b.onclick = () => show(b.dataset.i)));
 const man = $("#manual");
