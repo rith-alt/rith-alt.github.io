@@ -78,11 +78,12 @@ dialog input{width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a
   <div class="chips" id="alts"></div>
 
   <div class="label">Call steps</div>
-  <div class="steps">
+  <div class="steps" style="grid-template-columns:repeat(5,1fr)">
     <button data-i="open">1 Open</button>
-    <button data-i="hook">2 Money</button>
-    <button data-i="packages">3 Prices</button>
-    <button data-i="yes" class="close">4 Close</button>
+    <button data-i="ask">2 Ask</button>
+    <button data-i="hook">3 Money</button>
+    <button data-i="packages">4 Prices</button>
+    <button data-i="yes" class="close">5 Close</button>
   </div>
 
   <div class="label">Tap what they said (if the mic missed it)</div>
@@ -115,29 +116,31 @@ const fill = (t) => t.replace(/\{name\}/g, S.name || "I").replace(/\{biz\}/g, S.
 
 /* ---------- replies: English + Telugu (as spoken in Hyderabad) ---------- */
 const R = {
-  open: { tag: "Opening", en: "Hi sir, this is {name}. I already made a website for {biz}, it's ready and free to look at. Can I send the link on WhatsApp?", te: "Namaskaram sir, nenu {name}. {biz} kosam oka website already ready chesanu, chudataniki free. WhatsApp lo link pampana?", tip: "Smile while you talk. Keep it under 15 seconds." },
+  open: { tag: "Opening (ask permission)", en: "Hi sir, this is {name}. I know I'm calling out of the blue. I made a website for {biz}, already built. Can I take 30 seconds to tell you why I called, and then you decide?", te: "Namaskaram sir, nenu {name}. Suddenga call chestunnanu, sorry. {biz} kosam oka website already ready chesanu. Endhuku call chesano 30 seconds lo cheppana? Tarvatha meere decide cheyandi.", tip: "Never ask 'is this a bad time?'. It is the worst opener. Call between 3 and 5 PM." },
+  ask: { tag: "Ask questions (let him talk)", en: "Quick question sir: roughly how many orders a day come from Zomato and Swiggy? And do people book tables by phone or on Zomato?", te: "Chinna question sir: roju dadapu entha orders Zomato Swiggy nunchi vastayi? Table booking phone lo na, Zomato lo na?", tip: "Write down his number. Use it in the money step: his orders x ₹110 commission x 30 days." },
   hook: { tag: "Money hook", en: "Sir, Zomato and Swiggy take around 20 to 30 percent on every order. With your own website people order directly on WhatsApp, zero commission. Just 3 orders a day saves you about ten thousand a month.", te: "Sir, Zomato Swiggy prathi order meeda 20-30 percent teeskuntaru. Mee own website tho direct WhatsApp lo order vastundi, commission zero. Roju 3 orders vachina, nelaki dadapu padi velu save avtundi.", tip: "Pause after 'ten thousand a month'. Let it sink in." },
   packages: { tag: "Prices (big first)", en: "We have three options. Premium is {p3} with a full year of updates. Most people take Pro at {p2}. Basic is {p1}. And you can pay in parts.", te: "Moodu options unnayi sir. Premium {p3}, full year updates tho. Ekkuva mandi Pro teeskuntaru, {p2}. Basic {p1}. Installments lo kuda pay cheyochu.", tip: "Always say Premium first. Then stop talking." },
   yes: { tag: "Close the deal", en: "Great sir! I'll put it live on your own domain this week. Fifty percent now and the rest on launch day. Shall I send the details on WhatsApp?", te: "Super sir! Ee week lone mee own domain lo live chestanu. Ippudu 50 percent, migathadi launch roju. Details WhatsApp lo pampana?", tip: "Confirm everything in one WhatsApp message after the call." },
-  price_high: { tag: "Too expensive", en: "I understand sir. Think of it this way: it pays for itself from the commission you save. And I can do Basic at {p1}, or split Pro into small monthly payments.", te: "Artham ayyindi sir. Commission save ayyedi tho idi mee daggara nunchi kharchu kaadu, adhe recover avtundi. Basic {p1} ki chestanu, leda Pro ni chinna monthly payments lo cheyochu.", tip: "Never drop the price without removing something." },
+  price_high: { tag: "Too expensive", en: "Fair question sir, compared to what? If it's the commission you pay Zomato every month, this pays for itself. Think of it this way: it pays for itself from the commission you save. And I can do Basic at {p1}, or split Pro into small monthly payments.", te: "Artham ayyindi sir. Commission save ayyedi tho idi mee daggara nunchi kharchu kaadu, adhe recover avtundi. Basic {p1} ki chestanu, leda Pro ni chinna monthly payments lo cheyochu.", tip: "Never drop the price without removing something." },
   lowball: { tag: "Very low offer", en: "Sir, the domain and setup alone cost more than that. My lowest is {min}, and only if you post one Instagram reel tagging me.", te: "Sir, domain inka setup ke anthakante ekkuva avtundi. Na lowest {min}, adi kuda meeru Instagram lo okka reel lo nannu tag chesthe.", tip: "Then stay quiet. Let him answer first." },
   have_apps: { tag: "Already on Zomato / Instagram", en: "That's great sir, keep them. But those are rented. Zomato takes a cut on every order. A website is yours, no cut, and people find you on Google.", te: "Manchidhe sir, avi alage unchandi. Kani avi rent laantivi, Zomato prathi order ki cut teeskuntundi. Website mee sontham, cut ledu, Google lo kuda kanipistaru.", tip: "" },
   think: { tag: "Let me think", en: "Of course sir. I'll send the link now so you can try it. I can hold this price till Sunday, after that it goes back to normal.", te: "Sare sir, thappakunda. Ippude link pampistanu, try cheyandi. Ee price Sunday varaku hold chestanu, tarvatha normal price.", tip: "Ask: 'Shall I call you Saturday at 4?'" },
-  not_interested: { tag: "Not interested", en: "No problem sir. Just one look, it's already built for {biz}, it takes two minutes. If you don't like it, I won't disturb you again.", te: "Parledu sir. Okkasari chudandi chalu, {biz} kosam already ready ga undi, rendu nimishalu. Nachakapothe malli disturb cheyanu.", tip: "If he says no twice, thank him and end politely." },
+  not_interested: { tag: "Not interested", en: "Totally fine sir. Can I ask, is that because you get enough orders already, or because a website never worked for you before? Just one look, it's already built for {biz}, it takes two minutes. If you don't like it, I won't disturb you again.", te: "Parledu sir. Okkasari chudandi chalu, {biz} kosam already ready ga undi, rendu nimishalu. Nachakapothe malli disturb cheyanu.", tip: "If he says no twice, thank him and end politely." },
   busy: { tag: "Busy now", en: "Sorry sir, I'll be quick. Can I send the link on WhatsApp and call you back at a better time, maybe 4 PM?", te: "Sorry sir, short ga chepta. WhatsApp lo link pampi, meeku free unnappudu call cheyana? Saayantram 4 ki okay na?", tip: "3 to 5 PM is the best time for restaurants." },
   relative: { tag: "Someone else can make it", en: "Sure sir. But can they make this? Open the link and try the burger builder and the slot machine. This is a custom build, not a template.", te: "Sare sir. Kani idi cheyagalara? Link open chesi burger builder, slot machine try cheyandi. Idi custom ga chesindi, template kaadu.", tip: "Show, don't argue." },
   who: { tag: "Who are you?", en: "Sir, I'm {name}, I build websites for restaurants in Hyderabad. I liked your reels on Instagram, so I made a demo site for {biz} first.", te: "Sir, nenu {name}, Hyderabad lo restaurants ki websites chestanu. Mee Instagram reels nachayi, anduke mundu {biz} kosam demo website chesanu.", tip: "" },
   why_website: { tag: "Why do I need a website?", en: "Three reasons sir: direct orders with no commission, people find you on Google when they search best burger in Banjara Hills, and table bookings come straight to you.", te: "Moodu reasons sir: commission lekunda direct orders, Google lo 'best burger Banjara Hills' ani search chesthe meeru kanipistaru, inka table bookings direct ga meeke vastayi.", tip: "" },
-  send_details: { tag: "Send details", en: "Sure sir, sending the link on WhatsApp right now: it's the site I made for {biz}. Try it on your phone and I'll call you tomorrow.", te: "Sare sir, ippude WhatsApp lo link pamputhunna, {biz} kosam chesina site. Mee phone lo try cheyandi, repu call chestanu.", tip: "Send: {link}" },
+  send_details: { tag: "Send details", en: "Sure sir, sending it on WhatsApp now. One thing so I send the right info: what matters more to you, more direct orders or more table bookings? I'll call you tomorrow at 4 to hear what you think, okay?", te: "Sare sir, ippude WhatsApp lo pampistanu. Correct info pampataniki okka question: meeku ekkuva important edi, direct orders aa leka table bookings aa? Repu 4 ki call chesi mee opinion adugutanu, okay na?", tip: "Send: {link}" },
   payment: { tag: "Payment / advance", en: "Very simple sir: fifty percent to start, the rest only when it's live on your domain. Or pay in small monthly parts.", te: "Chala simple sir: start cheyadaniki 50 percent, migathadi mee domain lo live ayyaka matrame. Leda chinna monthly installments lo.", tip: "" },
   trust: { tag: "Is this real / trust", en: "Totally fair sir. You've already seen the site, it's live. You pay the rest only after it's live on your own domain. No risk.", te: "Correct ga adigaru sir. Site already live lo chusaru. Mee domain lo live ayyake migathadi pay cheyandi. Risk emi ledu.", tip: "" },
   updates: { tag: "Changes later?", en: "Yes sir, prices and new burgers can be changed anytime. Pro includes three months of updates, Premium a full year.", te: "Avunu sir, prices, kotha burgers eppudaina marchochu. Pro lo moodu nelalu updates, Premium lo full year.", tip: "" },
+  how_much: { tag: "Asking price early", en: "It depends on what you need sir. First see the site I made for {biz}. Then I'll give you three options, starting small. Shall I send the link now?", te: "Meeku em kavalo daani meeda depend avtundi sir. Mundu {biz} kosam chesina site chudandi. Tarvatha moodu options chepta, chinna dhaani nunchi. Ippude link pampana?", tip: "Do not say a number before he has seen the site." },
   time: { tag: "How long?", en: "Very fast sir. The site is already built. Your own domain can be live in two to three days.", te: "Chala fast sir. Site already ready. Mee own domain lo rendu moodu rojullo live chestanu.", tip: "" },
 };
 
 /* words that point to each situation (English, Telugu script, and Telugu typed in English) */
 const K = {
-  price_high: ["expensive", "costly", "too much", "high", "price", "rate", "budget", "discount", "reduce", "less", "cheap", "ekkuva", "ekuva", "thaggi", "taggi", "ఎక్కువ", "ధర", "రేటు", "తగ్గించ", "తగ్గి", "డిస్కౌంట్", "బడ్జెట్"],
+  price_high: ["expensive", "costly", "too much", "high", "budget", "discount", "reduce", "less", "cheap", "ekkuva", "ekuva", "thaggi", "taggi", "ఎక్కువ", "ధర", "రేటు", "తగ్గించ", "తగ్గి", "డిస్కౌంట్", "బడ్జెట్"],
   have_apps: ["zomato", "swiggy", "instagram", "already have", "already on", "facebook", "జొమాటో", "స్విగ్గీ", "ఇన్‌స్టాగ్రామ్", "ఇన్స్టాగ్రామ్", "ఉంది కదా"],
   think: ["think", "later", "tomorrow", "next week", "consider", "decide", "partner", "alochis", "aalochis", "chepta", "ఆలోచి", "తర్వాత", "రేపు", "చెప్తా", "చూద్దాం"],
   not_interested: ["not interested", "no need", "don't need", "dont need", "not required", "no thanks", "vaddu", "avasaram ledu", "వద్దు", "అవసరం లేదు", "ఇంట్రెస్ట్ లేదు"],
@@ -149,10 +152,11 @@ const K = {
   payment: ["advance", "payment", "pay", "installment", "emi", "upfront", "money first", "పేమెంట్", "అడ్వాన్స్", "డబ్బులు"],
   trust: ["fake", "scam", "fraud", "trust", "guarantee", "real", "sure", "నమ్మకం", "గ్యారెంటీ", "మోసం"],
   updates: ["change", "update", "edit", "new item", "modify", "maintenance", "మార్చ", "అప్డేట్", "మార్పు"],
+  how_much: ["how much", "what is the price", "what's the price", "your price", "price enti", "charges", "what is the cost", "what's the cost", "cost enta", "entha avutundi", "price enta", "rate enta", "ఎంత", "ఖర్చు ఎంత", "రేటు ఎంత"],
   time: ["how long", "how many days", "when", "time", "ready", "enni rojulu", "ఎన్ని రోజులు", "ఎప్పుడు", "టైం"],
   yes: ["okay", "ok", "deal", "done", "let's do", "lets do", "go ahead", "interested", "fine", "sare", "సరే", "ఓకే", "చేయండి", "చెయ్యండి"],
 };
-const LABEL = { price_high: "Too expensive", lowball: "Very low offer", have_apps: "Have Zomato/Insta", think: "Let me think", not_interested: "Not interested", busy: "Busy", relative: "Someone else will make", who: "Who are you", why_website: "Why website", send_details: "Send details", payment: "Payment", trust: "Trust", updates: "Changes later", time: "How long", yes: "Yes / OK" };
+const LABEL = { price_high: "Too expensive", lowball: "Very low offer", have_apps: "Have Zomato/Insta", think: "Let me think", not_interested: "Not interested", busy: "Busy", relative: "Someone else will make", who: "Who are you", why_website: "Why website", send_details: "Send details", payment: "Payment", trust: "Trust", updates: "Changes later", time: "How long", yes: "Yes / OK", how_much: "How much?" };
 
 /* a low number like 5k / 5000 / ఐదు వేలు means a lowball offer */
 function lowNumber(t) {
