@@ -94,17 +94,17 @@ dialog{max-height:88vh;overflow:auto}
     <div class="tip" id="rTip"></div>
   </div>
 
-  <button id="copyLink" style="display:none;width:100%;border:2px dashed var(--y);background:none;color:var(--y);border-radius:16px;padding:13px;margin-top:10px;font-weight:800;font-size:15px">📋 Copy demo link</button>
   <div class="label extra">Or maybe</div>
   <div class="chips extra" id="alts"></div>
 
   <div class="label">Call steps</div>
-  <div class="steps" style="grid-template-columns:repeat(5,1fr)">
+  <div class="steps" style="grid-template-columns:repeat(6,1fr)">
     <button data-i="open">1 Open</button>
     <button data-i="ask">2 Ask</button>
     <button data-i="hook">3 Money</button>
     <button data-i="packages">4 Prices</button>
-    <button data-i="yes" class="close">5 Close</button>
+    <button data-i="meeting">5 Visit</button>
+    <button data-i="yes" class="close">6 Close</button>
   </div>
 
   <div class="label extra">Tap what they said (if the mic missed it)</div>
@@ -130,7 +130,6 @@ dialog{max-height:88vh;overflow:auto}
   <h2 style="font-size:18px">Settings</h2>
   <label>Your name<input id="sName" placeholder="Rithvik"></label>
   <label>Business you are calling<input id="sBiz" placeholder="e.g. Moyaaah"></label>
-  <label>Demo link<input id="sLink" placeholder="https://..."></label>
   <label>Premium price (₹)<input id="sP3" inputmode="numeric"></label>
   <label>Pro price (₹)<input id="sP2" inputmode="numeric"></label>
   <label>Basic price (₹)<input id="sP1" inputmode="numeric"></label>
@@ -141,11 +140,11 @@ dialog{max-height:88vh;overflow:auto}
 
 <script>
 const $ = (s) => document.querySelector(s);
-const DEF = { name: "", biz: "your restaurant", link: "", p3: 75000, p2: 40000, p1: 20000, min: 15000 };
+const DEF = { name: "", biz: "your restaurant", p3: 75000, p2: 40000, p1: 20000, min: 15000 };
 let S = DEF;
 try { S = { ...DEF, ...JSON.parse(localStorage.getItem("ch-set") || "{}") }; } catch (e) {}
 const inr = (n) => "₹" + Number(n).toLocaleString("en-IN");
-const fill = (t) => t.replace(/\{name\}/g, S.name || "[your name]").replace(/\{biz\}/g, S.biz).replace(/\{p3\}/g, inr(S.p3)).replace(/\{p2\}/g, inr(S.p2)).replace(/\{p1\}/g, inr(S.p1)).replace(/\{min\}/g, inr(S.min)).replace(/\{link\}/g, S.link);
+const fill = (t) => t.replace(/\{name\}/g, S.name || "[your name]").replace(/\{biz\}/g, S.biz).replace(/\{p3\}/g, inr(S.p3)).replace(/\{p2\}/g, inr(S.p2)).replace(/\{p1\}/g, inr(S.p1)).replace(/\{min\}/g, inr(S.min));
 
 /* ---------- replies: English + Telugu (as spoken in Hyderabad) ---------- */
 const R = {
@@ -153,7 +152,7 @@ const R = {
   ask: { tag: "Ask questions (let him talk)", en: "Quick question sir: roughly how many orders a day come from Zomato and Swiggy? And do people book tables by phone or on Zomato?", te: "Chinna question sir: roju dadapu entha orders Zomato Swiggy nunchi vastayi? Table booking phone lo na, Zomato lo na?", tip: "Write down his number. Use it in the money step: his orders x ₹110 commission x 30 days." },
   hook: { tag: "Money hook", en: "Sir, Zomato and Swiggy take around 20 to 30 percent on every order. With your own website people order directly on WhatsApp, zero commission. Just 3 orders a day saves you about ten thousand a month.", te: "Sir, Zomato Swiggy prathi order meeda 20-30 percent teeskuntaru. Mee own website tho direct WhatsApp lo order vastundi, commission zero. Roju 3 orders vachina, nelaki dadapu padi velu save avtundi.", tip: "Pause after 'ten thousand a month'. Let it sink in." },
   packages: { tag: "Prices (big first)", en: "We have three options. Premium is {p3} with a full year of updates. Most people take Pro at {p2}. Basic is {p1}. And you can pay in parts.", te: "Moodu options unnayi sir. Premium {p3}, full year updates tho. Ekkuva mandi Pro teeskuntaru, {p2}. Basic {p1}. Installments lo kuda pay cheyochu.", tip: "Always say Premium first. Then stop talking." },
-  yes: { tag: "Close the deal", en: "Great sir! I'll put it live on your own domain this week. Fifty percent now and the rest on launch day. Shall I send the details on WhatsApp?", te: "Super sir! Ee week lone mee own domain lo live chestanu. Ippudu 50 percent, migathadi launch roju. Details WhatsApp lo pampana?", tip: "Confirm everything in one WhatsApp message after the call." },
+  yes: { tag: "Close the deal", en: "Great sir! Let's lock it now. I'll put it live on your own domain this week. Fifty percent now and the rest on launch day. Shall I send the details on WhatsApp?", te: "Super sir! Ee week lone mee own domain lo live chestanu. Ippudu 50 percent, migathadi launch roju. Details WhatsApp lo pampana?", tip: "Confirm everything in one WhatsApp message after the call." },
   price_high: { tag: "Too expensive", en: "Fair question sir, compared to what? If it's the commission you pay Zomato every month, this pays for itself. And I can do Basic at {p1}, or split Pro into small monthly payments.", te: "Artham ayyindi sir. Commission save ayyedi tho idi mee daggara nunchi kharchu kaadu, adhe recover avtundi. Basic {p1} ki chestanu, leda Pro ni chinna monthly payments lo cheyochu.", tip: "Never drop the price without removing something." },
   lowball: { tag: "Very low offer", en: "Sir, the domain and setup alone cost more than that. My lowest is {min}, and only if you post one Instagram reel tagging me.", te: "Sir, domain inka setup ke anthakante ekkuva avtundi. Na lowest {min}, adi kuda meeru Instagram lo okka reel lo nannu tag chesthe.", tip: "Then stay quiet. Let him answer first." },
   have_apps: { tag: "Already on Zomato / Instagram", en: "That's great sir, keep them. But those are rented. Zomato takes a cut on every order. A website is yours, no cut, and people find you on Google.", te: "Manchidhe sir, avi alage unchandi. Kani avi rent laantivi, Zomato prathi order ki cut teeskuntundi. Website mee sontham, cut ledu, Google lo kuda kanipistaru.", tip: "" },
@@ -163,7 +162,7 @@ const R = {
   relative: { tag: "Someone else can make it", en: "Sure sir. But can they make this? Open the link and try the burger builder and the slot machine. This is a custom build, not a template.", te: "Sare sir. Kani idi cheyagalara? Link open chesi burger builder, slot machine try cheyandi. Idi custom ga chesindi, template kaadu.", tip: "Show, don't argue." },
   who: { tag: "Who are you?", en: "Sir, I'm {name}, I build websites for restaurants in Hyderabad. I liked your reels on Instagram, so I made a demo site for {biz} first.", te: "Sir, nenu {name}, Hyderabad lo restaurants ki websites chestanu. Mee Instagram reels nachayi, anduke mundu {biz} kosam demo website chesanu.", tip: "" },
   why_website: { tag: "Why do I need a website?", en: "Three reasons sir: direct orders with no commission, people find you on Google when they search best burger in Banjara Hills, and table bookings come straight to you.", te: "Moodu reasons sir: commission lekunda direct orders, Google lo 'best burger Banjara Hills' ani search chesthe meeru kanipistaru, inka table bookings direct ga meeke vastayi.", tip: "" },
-  send_details: { tag: "Send details", en: "Sure sir, sending it on WhatsApp now. One thing so I send the right info: what matters more to you, more direct orders or more table bookings? I'll call you tomorrow at 4 to hear what you think, okay?", te: "Sare sir, ippude WhatsApp lo pampistanu. Correct info pampataniki okka question: meeku ekkuva important edi, direct orders aa leka table bookings aa? Repu 4 ki call chesi mee opinion adugutanu, okay na?", tip: "Send: {link}" },
+  send_details: { tag: "Send details", en: "Sure sir, sending it on WhatsApp now. One thing so I send the right info: what matters more to you, more direct orders or more table bookings? I'll call you tomorrow at 4 to hear what you think, okay?", te: "Sare sir, ippude WhatsApp lo pampistanu. Correct info pampataniki okka question: meeku ekkuva important edi, direct orders aa leka table bookings aa? Repu 4 ki call chesi mee opinion adugutanu, okay na?", tip: "Send the demo on WhatsApp right after the call." },
   payment: { tag: "Payment / advance", en: "Very simple sir: fifty percent to start, the rest only when it's live on your domain. Or pay in small monthly parts.", te: "Chala simple sir: start cheyadaniki 50 percent, migathadi mee domain lo live ayyaka matrame. Leda chinna monthly installments lo.", tip: "" },
   trust: { tag: "Is this real / trust", en: "Totally fair sir. You've already seen the site, it's live. You pay the rest only after it's live on your own domain. No risk.", te: "Correct ga adigaru sir. Site already live lo chusaru. Mee domain lo live ayyake migathadi pay cheyandi. Risk emi ledu.", tip: "" },
   updates: { tag: "Changes later?", en: "Yes sir, prices and new burgers can be changed anytime. Pro includes three months of updates, Premium a full year.", te: "Avunu sir, prices, kotha burgers eppudaina marchochu. Pro lo moodu nelalu updates, Premium lo full year.", tip: "" },
@@ -171,7 +170,29 @@ const R = {
   time: { tag: "How long?", en: "Very fast sir. The site is already built. Your own domain can be live in two to three days.", te: "Chala fast sir. Site already ready. Mee own domain lo rendu moodu rojullo live chestanu.", tip: "" },
 };
 
+Object.assign(R, {
+  gatekeeper: { tag: "Owner not there (staff answered)",
+    en: "No problem at all. Who looks after the website and online orders there? What's his name, and when is the best time to catch him? I'll send the demo I made for {biz} on WhatsApp so he can see it first.",
+    te: "Parledu andi. Akkada website, online orders evaru chustaru? Vaari peru enti, eppudu call chesthe dorukutaru? {biz} kosam chesina demo WhatsApp lo pampistanu, mundu chustaru.",
+    tip: "Be honest and short. Write down the owner's name and the time. Next call, ask for him by name." },
+  have_website: { tag: "We already have a website",
+    en: "That's great sir. Quick question: does it take orders on WhatsApp, and does it show up when people search best burger near Banjara Hills? Let me show you the difference in two minutes.",
+    te: "Chala manchidi sir. Okka question: adi WhatsApp lo orders teesukuntunda, 'best burger Banjara Hills' ani search chesthe kanipistunda? Rendu nimishallo difference chupistanu.",
+    tip: "Don't attack his old site. Ask, then show the demo." },
+  bad_experience: { tag: "Tried before, didn't work",
+    en: "I'm sorry that happened sir. That's exactly why the site is already built: you see it first. And you pay the rest only after it's live and you're happy. No risk.",
+    te: "Ala jarigindante sorry sir. Anduke site mundu ready chesanu, meeru mundu chudandi. Live ayyi meeku nachaka matrame migathadi pay cheyandi. Risk ledu.",
+    tip: "Ask what went wrong last time, then promise the opposite." },
+  meeting: { tag: "Interested → book a visit",
+    en: "Great sir. Does it make sense for me to come and show you on my phone, ten minutes? Tomorrow at 4 PM or Saturday at 11 AM, which is better?",
+    te: "Super sir. Naa phone lo chupinchadaniki padi nimishalu vasthanu, okay na? Repu saayantram 4 ki aa, leka Saturday podduna 11 ki aa, edi better?",
+    tip: "Give two times, never 'when are you free'. Lock it before you hang up." },
+});
 const HI = {
+  gatekeeper: "Koi baat nahi ji. Wahan website aur online orders kaun dekhte hain? Unka naam kya hai, aur kab call karun toh milenge? {biz} ke liye bana demo WhatsApp pe bhej deta hoon, pehle dekh lenge.",
+  have_website: "Bahut achha sir. Ek sawaal: kya woh WhatsApp pe order leti hai, aur 'best burger Banjara Hills' search karne pe dikhti hai? Do minute mein farak dikhata hoon.",
+  bad_experience: "Sorry sir, aisa hua. Isiliye site pehle se bana di hai, aap pehle dekhiye. Live hone aur pasand aane ke baad hi baaki paisa dijiye. Koi risk nahi.",
+  meeting: "Badhiya sir. Das minute ke liye aake apne phone pe dikha doon? Kal shaam 4 baje ya Saturday subah 11 baje, kaunsa theek rahega?",
   open: "Namaste sir, main {name} bol raha hoon. Pata hai achanak call kiya hai. Maine {biz} ke liye ek website already bana di hai. 30 second mein bataun kyun call kiya, phir aap decide kariye?",
   ask: "Ek chhota sa sawaal sir: roz lagbhag kitne orders Zomato aur Swiggy se aate hain? Table booking phone pe hoti hai ya Zomato pe?",
   hook: "Sir, Zomato Swiggy har order pe 20-30 percent lete hain. Apni website se log seedha WhatsApp pe order karenge, commission zero. Roz sirf 3 order bhi aaye toh mahine ke lagbhag das hazaar bachenge.",
@@ -194,6 +215,8 @@ const HI = {
   how_much: "Aapko kya chahiye uspe depend karta hai sir. Pehle {biz} ke liye bani site dekhiye. Phir teen options bataunga, chhote se shuru. Abhi link bhejoon?",
 };
 for (const k in HI) if (R[k]) R[k].hi = HI[k];
+R.ask.tip = "One or two questions only. On cold calls you earn questions; sell the next step. Note his order number for the money step.";
+R.hook.tip = "Pause after the saving. Successful cold calls: you talk a little more than him (about 55%).";
 R.open.tip = "If they answer in Telugu or Hindi, tap తెలుగు or हिंदी at the top. Never ask 'is this a bad time?'.";
 
 /* words that point to each situation (English, Telugu script, and Telugu typed in English) */
@@ -210,11 +233,15 @@ const K = {
   payment: ["advance", "payment", "pay", "installment", "emi", "upfront", "money first", "పేమెంట్", "అడ్వాన్స్", "డబ్బులు"],
   trust: ["dhokha", "bharosa", "धोखा", "भरोसा", "fake", "scam", "fraud", "trust", "guarantee", "real", "sure", "నమ్మకం", "గ్యారెంటీ", "మోసం"],
   updates: ["change", "update", "edit", "menu", "add burger", "new burger", "new item", "modify", "maintenance", "మార్చ", "అప్డేట్", "మార్పు"],
+  gatekeeper: ["not here", "not available", "he is out", "owner is not", "sir is not", "manager", "boss", "i'm staff", "call the owner", "owner ledu", "sir ledu", "bayataki", "బయటకి", "లేరు", "ఓనర్ లేరు", "సార్ లేరు", "sir nahi hai", "malik nahi", "मालिक नहीं", "सर नहीं हैं", "बाहर गए"],
+  have_website: ["have a website", "already have website", "our website", "website undi", "website hai", "వెబ్‌సైట్ ఉంది", "వెబ్సైట్ ఉంది", "वेबसाइट है"],
+  bad_experience: ["tried before", "didn't work", "did not work", "waste", "no use", "useless", "cheated", "last time", "mundu chesam", "pehle banaya", "pehle bhi", "ఉపయోగం లేదు", "వేస్ట్", "पहले बनाया", "कोई फायदा नहीं"],
+  meeting: ["sounds good", "interesting", "nice", "looks good", "show me", "come and show", "bagundi", "chala bagundi", "accha hai", "achha hai", "dikhao", "బాగుంది", "చూపించండి", "अच्छा है", "दिखाओ", "दिखाइए"],
   how_much: ["kitna", "kitne ka", "कितना", "कितने का", "how much", "what is the price", "what's the price", "your price", "price enti", "charges", "what is the cost", "what's the cost", "cost enta", "entha avutundi", "price enta", "rate enta", "ఎంత", "ఖర్చు ఎంత", "రేటు ఎంత"],
   time: ["kitne din", "कितने दिन", "कब तक", "how long", "how many days", "when", "time", "ready", "enni rojulu", "ఎన్ని రోజులు", "ఎప్పుడు", "టైం"],
   yes: ["theek hai", "chalo", "ठीक है", "चलो", "हाँ करो", "कर दो", "okay", "ok", "deal", "done", "let's do", "lets do", "go ahead", "interested", "fine", "sare", "సరే", "ఓకే", "చేయండి", "చెయ్యండి"],
 };
-const LABEL = { price_high: "Too expensive", lowball: "Very low offer", have_apps: "Have Zomato/Insta", think: "Let me think", not_interested: "Not interested", busy: "Busy", relative: "Someone else will make", who: "Who are you", why_website: "Why website", send_details: "Send details", payment: "Payment", trust: "Trust", updates: "Changes later", time: "How long", yes: "Yes / OK", how_much: "How much?" };
+const LABEL = { price_high: "Too expensive", lowball: "Very low offer", have_apps: "Have Zomato/Insta", think: "Let me think", not_interested: "Not interested", busy: "Busy", relative: "Someone else will make", who: "Who are you", why_website: "Why website", send_details: "Send details", payment: "Payment", trust: "Trust", updates: "Changes later", time: "How long", yes: "Yes / OK", how_much: "How much?", gatekeeper: "Owner not there", have_website: "Have a website", bad_experience: "Tried before", meeting: "Sounds good" };
 
 /* a low number like 5k / 5000 / ఐదు వేలు means a lowball offer */
 function lowNumber(t) {
@@ -346,26 +373,6 @@ function stop() {
 $("#mic").onclick = () => { if (!listening) beginCall(); listening ? stop() : start(); };
 document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = () => b.closest("dialog").close()));
 
-/* ---------- one tap copies the demo link (to paste in WhatsApp) ---------- */
-function paintCopy() { $("#copyLink").style.display = S.link ? "block" : "none"; }
-async function copyLink() {
-  if (!S.link) return;
-  let ok = false;
-  try { await navigator.clipboard.writeText(S.link); ok = true; } catch (e) {
-    const t = document.createElement("textarea");
-    t.value = S.link; document.body.appendChild(t); t.select();
-    try { ok = document.execCommand("copy"); } catch (e2) {}
-    t.remove();
-  }
-  const b = $("#copyLink");
-  b.textContent = ok ? "✅ Copied! Paste it in WhatsApp" : "Copy failed. Long-press: " + S.link;
-  if (navigator.vibrate) try { navigator.vibrate(30); } catch (e) {}
-  setTimeout(() => (b.textContent = "📋 Copy demo link"), 2500);
-}
-$("#copyLink").onclick = copyLink;
-$("#rTip").onclick = () => { if (S.link && $("#rTip").textContent.includes(S.link)) copyLink(); };
-paintCopy();
-
 /* ================= call memory, review and learning ================= */
 let CALL = null;
 const loadCalls = () => { try { return JSON.parse(localStorage.getItem("ch-calls") || "[]"); } catch (e) { return []; } };
@@ -378,7 +385,7 @@ function beginCall() {
   $("#endCall").style.display = "block";
   $("#hist").innerHTML = "";
 }
-const OBJ = ["price_high", "lowball", "have_apps", "think", "not_interested", "busy", "relative", "who", "why_website", "how_much", "trust", "payment", "send_details", "updates", "time"];
+const OBJ = ["gatekeeper", "have_website", "bad_experience", "price_high", "lowball", "have_apps", "think", "not_interested", "busy", "relative", "who", "why_website", "how_much", "trust", "payment", "send_details", "updates", "time"];
 
 // score a call against what research says works
 function review(c, past) {
@@ -408,6 +415,14 @@ function review(c, past) {
     if (objs.includes("price_high") || objs.includes("lowball")) bad.push("Lost on price. Do the money maths with HIS order numbers before any price, and offer pay-in-parts.");
     if (!ids.includes("yes")) bad.push("You never asked for the deal. Use step 5 (Close) even if unsure.");
   }
+  // research: successful cold calls run ~6 min vs ~3 min; talking under 25s halves your chances
+  if (mins >= 4) { score += 6; good.push("Good call length (" + mins.toFixed(1) + " min). Successful cold calls run about 6 minutes."); }
+  else if (c.outcome !== "deal" && mins >= 1 && mins < 2.5) bad.push("Short call (" + mins.toFixed(1) + " min). Calls that book a visit run about twice as long: keep it going with one good question.");
+  if (c.outcome === "callback" && !ids.includes("meeting") && !ids.includes("yes")) bad.push("No fixed time. Before hanging up, offer two exact times (tomorrow 4 PM or Saturday 11 AM).");
+  if (ids.includes("meeting")) { score += 6; good.push("You asked for a visit with exact times. That's how top callers close."); }
+  if (objs.includes("gatekeeper")) good.push("Staff answered. Did you get the owner's name and best time? Call back and ask for him by name.");
+  const steps = ["open", "ask", "hook", "packages", "yes"].filter((x) => ids.includes(x)).length;
+  if (steps >= 4) good.push("You followed the steps. Top performers win by doing the same process every call.");
   if (c.lines.length === 0) bad.push("The mic heard nothing. Put the call on speaker and keep the helper phone close.");
   score = Math.max(0, Math.min(100, Math.round(score)));
   const prev = past.slice(-5).map((p) => p.score);
@@ -512,13 +527,12 @@ Object.keys(LABEL).filter((k) => k !== "yes").forEach((id) => {
 });
 
 /* ---------- settings ---------- */
-const F = { name: "#sName", biz: "#sBiz", link: "#sLink", p3: "#sP3", p2: "#sP2", p1: "#sP1", min: "#sMin" };
+const F = { name: "#sName", biz: "#sBiz", p3: "#sP3", p2: "#sP2", p1: "#sP1", min: "#sMin" };
 $("#setBtn").onclick = () => { for (const k in F) $(F[k]).value = S[k]; $("#settings").showModal(); };
 $("#save").onclick = () => {
   for (const k in F) S[k] = /^p|min/.test(k) ? Number($(F[k]).value) || DEF[k] : $(F[k]).value.trim() || DEF[k];
   try { localStorage.setItem("ch-set", JSON.stringify(S)); } catch (e) {}
   $("#settings").close();
-  paintCopy();
   show("open");
 };
 
