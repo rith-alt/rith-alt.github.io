@@ -124,7 +124,7 @@ dialog{max-height:88vh;overflow:auto}
   <label>Note (optional)<input id="endNote" placeholder="e.g. wants to see it in person"></label>
 </dialog>
 <dialog id="revDlg"><div id="revBody"></div><button class="btn" data-close>Got it</button></dialog>
-<dialog id="statsDlg"><div id="statsBody"></div><button class="btn" id="exportBtn" style="background:#2a241e;color:var(--ink)">⬇️ Export my calls (for team lead)</button><button class="btn" data-close>Close</button></dialog>
+<dialog id="statsDlg"><div id="statsBody"></div><button class="btn" id="exportBtn" style="background:#2a241e;color:var(--ink)">⬇️ Download calls as text</button><button class="btn" data-close>Close</button></dialog>
 <dialog id="settings">
   <h2 style="font-size:18px">Settings</h2>
   <label>Your name<input id="sName" placeholder="Rithvik"></label>
@@ -246,7 +246,7 @@ function classify(text) {
 function show(id, from) {
   const r = R[id];
   if (!r) return;
-  if (CALL) CALL.ev.push({ t: Date.now() - CALL.start, id, heard: !!from });
+  if (CALL) CALL.ev.push({ t: Date.now() - CALL.start, id, heard: !!from, lang });
   $("#rTag").textContent = r.tag + (from ? " · heard" : "");
   CUR = id;
   const L = lang === "te-IN" ? "te" : lang === "hi-IN" ? "hi" : "en";
@@ -308,7 +308,7 @@ function start() {
     }
     const hits = classify(now);
     if (hits.length) { show(hits[0], true); setAlts(hits.slice(1)); }
-    if (fin) { addHist(fin, hits[0]); if (CALL) CALL.lines.push(fin.slice(0, 200)); }
+    if (fin) { addHist(fin, hits[0]); if (CALL) CALL.lines.push({ t: Date.now() - CALL.start, text: fin.slice(0, 200).trim() }); }
   };
   rec.onerror = (e) => {
     if (e.error === "not-allowed") { warn("Microphone blocked. Allow the mic for this site in Chrome settings."); stop(); }
@@ -447,11 +447,32 @@ function stats() {
     (rows ? '<p class="label">Objections</p>' + rows : "") + '<p class="label">Recent calls</p>' + list;
 }
 $("#statsBtn").onclick = () => { $("#statsBody").innerHTML = stats(); $("#statsDlg").showModal(); };
+function callAsText(c, i) {
+  const res = { deal: "Deal", callback: "Callback", no: "No" }[c.outcome] || "-";
+  const when = new Date(c.start).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+  const head = "CALL " + i + "  |  " + (c.biz || "") + "  |  " + when + "  |  Result: " + res + "  |  Score: " + (c.score ?? "-") + "/100";
+  const rows = [];
+  (c.lines || []).forEach((l, k) => rows.push(typeof l === "string" ? { t: k * 1000, who: "Owner", text: l } : { t: l.t, who: "Owner", text: l.text }));
+  (c.ev || []).forEach((e) => {
+    const r = R[e.id];
+    if (!r) return;
+    const L = e.lang === "te-IN" ? "te" : e.lang === "hi-IN" ? "hi" : "en";
+    rows.push({ t: e.t + 1, who: "Caller", text: fill(r[L] || r.en) });
+  });
+  rows.sort((a, b) => a.t - b.t);
+  const out = [];
+  rows.forEach((r) => { const last = out[out.length - 1]; if (!(last && last.who === r.who && last.text === r.text)) out.push(r); });
+  const talk = out.map((r) => (r.who === "Caller" ? "Caller: " : "Owner:  ") + r.text).join("\n");
+  return head + "\n" + "-".repeat(60) + "\n" + (talk || "(nothing recorded)") + (c.note ? "\n\nNote: " + c.note : "") + "\n";
+}
 $("#exportBtn").onclick = () => {
-  const blob = new Blob([JSON.stringify({ seller: S.name, calls: loadCalls() }, null, 1)], { type: "application/json" });
+  const calls = loadCalls();
+  const text = "Calls by " + (S.name || "me") + "\n" + "Owner = what the mic heard. Caller = the reply the app suggested.\n\n" +
+    (calls.length ? calls.map((c, i) => callAsText(c, i + 1)).join("\n\n") : "No calls yet.");
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "calls-" + (S.name || "me").replace(/\W+/g, "_") + ".json";
+  a.download = "calls-" + (S.name || "me").replace(/\W+/g, "_") + ".txt";
   a.click();
 };
 
