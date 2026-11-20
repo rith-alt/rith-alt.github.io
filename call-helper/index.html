@@ -46,10 +46,13 @@ dialog input{width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a
 .btn{border:0;border-radius:14px;padding:12px 16px;font-weight:800;background:var(--y);color:#111;margin-top:14px;width:100%;font-size:16px}
 .note{font-size:13px;color:var(--mute);margin-top:8px}
 .warn{background:#3a1512;color:#ffb4ad;border-radius:14px;padding:10px 12px;font-size:14px;margin-top:10px;display:none}
+body.simple .extra{display:none!important}
+#more{border:0;background:none;color:var(--mute);font-weight:700;font-size:14px;width:100%;padding:14px;margin-top:10px;text-decoration:underline}
+body.simple #reply .say{font-size:26px}body.simple #reply .te{font-size:22px}
 #hist .h{background:var(--card);border-radius:12px;padding:8px 12px;margin-top:6px;font-size:14px;color:var(--mute)}
 </style>
 </head>
-<body>
+<body class="simple">
 <header>
   <h1>📞 Call <b>Helper</b></h1>
   <div class="row">
@@ -61,10 +64,10 @@ dialog input{width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a
 <div class="wrap">
   <div class="warn" id="warn"></div>
   <button id="mic">🎙️ Start listening</button>
-  <p class="note">Call on <b>speaker</b> on your phone. Open this app on a <b>second phone or laptop</b> next to it. Choose EN or తెలుగు to match what the owner speaks.</p>
+  <p class="note extra">Call on <b>speaker</b> on your phone. Open this app on a <b>second phone or laptop</b> next to it. Choose EN or తెలుగు to match what the owner speaks.</p>
 
-  <div class="label">They said</div>
-  <div id="heard">…waiting</div>
+  <div class="label extra">They said</div>
+  <div id="heard" class="extra">…waiting</div>
 
   <div class="label">Say this ↓</div>
   <div id="reply">
@@ -74,8 +77,8 @@ dialog input{width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a
     <div class="tip" id="rTip"></div>
   </div>
 
-  <div class="label">Or maybe</div>
-  <div class="chips" id="alts"></div>
+  <div class="label extra">Or maybe</div>
+  <div class="chips extra" id="alts"></div>
 
   <div class="label">Call steps</div>
   <div class="steps" style="grid-template-columns:repeat(5,1fr)">
@@ -86,11 +89,12 @@ dialog input{width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a
     <button data-i="yes" class="close">5 Close</button>
   </div>
 
-  <div class="label">Tap what they said (if the mic missed it)</div>
-  <div class="chips" id="manual"></div>
+  <div class="label extra">Tap what they said (if the mic missed it)</div>
+  <div class="chips extra" id="manual"></div>
 
-  <div class="label">This call</div>
-  <div id="hist"></div>
+  <div class="label extra">This call</div>
+  <div id="hist" class="extra"></div>
+  <button id="more">Show more ▾</button>
 </div>
 
 <dialog id="settings">
@@ -292,6 +296,17 @@ $("#save").onclick = () => {
   $("#settings").close();
   show("open");
 };
+
+/* simple mode: only mic, reply and steps (remembered per phone) */
+function setSimple(on) {
+  document.body.classList.toggle("simple", on);
+  $("#more").textContent = on ? "Show more ▾" : "Show less ▴";
+  try { localStorage.setItem("ch-simple", on ? "1" : "0"); } catch (e) {}
+}
+let simple = true;
+try { simple = localStorage.getItem("ch-simple") !== "0"; } catch (e) {}
+setSimple(simple);
+$("#more").onclick = () => setSimple(!document.body.classList.contains("simple"));
 
 show("open");
 if (!S.name) setTimeout(() => $("#setBtn").click(), 400);
