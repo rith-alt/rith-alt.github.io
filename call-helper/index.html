@@ -227,7 +227,7 @@ function lowNumber(t) {
     if (/k|thousand|వేల/.test(s)) n *= 1000;
     if (n >= 1000 && n < S.min) return true;
   }
-  return /(ఐదు|పది|five|ten)\s*(వేల|thousand|k)/.test(t);
+  return /(ఐదు|పది|five|ten|paanch|panch|das|पांच|पाँच|दस|aidu|padi)\s*(వేల|thousand|k|hazaar|hazar|हज़ार|हजार|velu|vela)/.test(t);
 }
 
 function classify(text) {
