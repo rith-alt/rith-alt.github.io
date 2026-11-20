@@ -138,6 +138,9 @@ dialog{max-height:88vh;overflow:auto}
   <label>Pro price (₹)<input id="sP2" inputmode="numeric"></label>
   <label>Basic price (₹)<input id="sP1" inputmode="numeric"></label>
   <label>Lowest you accept (₹)<input id="sMin" inputmode="numeric"></label>
+  <label>Voice<select id="sVoice" style="width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a;background:var(--bg);color:var(--ink);font-size:15px;margin-top:4px"></select></label>
+  <button type="button" class="btn" id="testVoice" style="background:#2a241e;color:var(--ink)">▶️ Test voice</button>
+  <p class="note">Most real-sounding free voices: open this app on a laptop in <b>Microsoft Edge</b> and pick a voice with "Natural" in the name (e.g. Neerja or Prabhat, English India).</p>
   <button class="btn" id="save">Save</button>
   <p class="note">Saved on this phone only. Each team member sets their own name.</p>
 </dialog>
@@ -289,9 +292,27 @@ function addHist(text, id) {
 const VOICE = { on: true, lang: "en" };
 try { const v = JSON.parse(localStorage.getItem("ch-voice") || "{}"); Object.assign(VOICE, v); } catch (e) {}
 let speaking = false, lastSaid = "", lastAt = 0;
+function voiceScore(v) {
+  let sc = 0;
+  if (/natural/i.test(v.name)) sc += 50;          // Edge's free neural voices
+  if (/online/i.test(v.name)) sc += 10;
+  if (/google/i.test(v.name)) sc += 8;
+  if (v.lang === "en-IN") sc += 30;               // reads English, Hinglish and Tenglish best
+  else if (/^en-(GB|AU|US)/.test(v.lang)) sc += 5;
+  return sc;
+}
 function bestVoice() {
   const vs = speechSynthesis.getVoices();
-  return vs.find((v) => v.lang === "en-IN" && /google/i.test(v.name)) || vs.find((v) => v.lang === "en-IN") || vs.find((v) => /^en/.test(v.lang)) || null;
+  if (S.voice) { const pick = vs.find((v) => v.name === S.voice); if (pick) return pick; }
+  return vs.filter((v) => /^en/.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a))[0] || null;
+}
+function fillVoices() {
+  const sel = $("#sVoice");
+  if (!sel || !("speechSynthesis" in window)) return;
+  const vs = speechSynthesis.getVoices().filter((v) => /^(en|hi|te)/.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
+  const auto = bestVoice();
+  sel.innerHTML = '<option value="">Auto (best: ' + (auto ? auto.name.replace(/[<>]/g, "") : "none") + ")</option>" +
+    vs.map((v) => '<option value="' + v.name.replace(/"/g, "") + '"' + (v.name === S.voice ? " selected" : "") + ">" + v.name.replace(/[<>]/g, "") + " · " + v.lang + "</option>").join("");
 }
 function speak(text) {
   if (!VOICE.on || !("speechSynthesis" in window) || !text) return;
@@ -313,7 +334,7 @@ function paintVoice() {
   document.querySelectorAll("#sayLang button").forEach((b) => b.classList.toggle("on", b.dataset.v === VOICE.lang));
   try { localStorage.setItem("ch-voice", JSON.stringify(VOICE)); } catch (e) {}
 }
-if ("speechSynthesis" in window) speechSynthesis.onvoiceschanged = () => {};
+if ("speechSynthesis" in window) speechSynthesis.onvoiceschanged = fillVoices;
 $("#voiceBtn").onclick = () => { VOICE.on = !VOICE.on; if (!VOICE.on) speechSynthesis.cancel(); paintVoice(); };
 document.querySelectorAll("#sayLang button").forEach((b) => (b.onclick = () => { VOICE.lang = b.dataset.v; paintVoice(); lastSaid = ""; }));
 paintVoice();
@@ -510,10 +531,13 @@ Object.keys(LABEL).filter((k) => k !== "yes").forEach((id) => {
 
 /* ---------- settings ---------- */
 const F = { name: "#sName", biz: "#sBiz", link: "#sLink", p3: "#sP3", p2: "#sP2", p1: "#sP1", min: "#sMin" };
-$("#setBtn").onclick = () => { for (const k in F) $(F[k]).value = S[k]; $("#settings").showModal(); };
+$("#testVoice").onclick = () => { S.voice = $("#sVoice").value; lastSaid = ""; const on = VOICE.on; VOICE.on = true; speak(fill(R.hook.en)); VOICE.on = on; };
+$("#setBtn").onclick = () => { for (const k in F) $(F[k]).value = S[k]; fillVoices(); $("#settings").showModal(); };
 $("#save").onclick = () => {
   for (const k in F) S[k] = /^p|min/.test(k) ? Number($(F[k]).value) || DEF[k] : $(F[k]).value.trim() || DEF[k];
+  S.voice = $("#sVoice").value;
   try { localStorage.setItem("ch-set", JSON.stringify(S)); } catch (e) {}
+  speechSynthesis.cancel();
   $("#settings").close();
   show("open");
 };
