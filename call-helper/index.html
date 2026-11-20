@@ -94,6 +94,7 @@ dialog{max-height:88vh;overflow:auto}
     <div class="tip" id="rTip"></div>
   </div>
 
+  <button id="copyLink" style="display:none;width:100%;border:2px dashed var(--y);background:none;color:var(--y);border-radius:16px;padding:13px;margin-top:10px;font-weight:800;font-size:15px">📋 Copy demo link</button>
   <div class="label extra">Or maybe</div>
   <div class="chips extra" id="alts"></div>
 
@@ -345,6 +346,26 @@ function stop() {
 $("#mic").onclick = () => { if (!listening) beginCall(); listening ? stop() : start(); };
 document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = () => b.closest("dialog").close()));
 
+/* ---------- one tap copies the demo link (to paste in WhatsApp) ---------- */
+function paintCopy() { $("#copyLink").style.display = S.link ? "block" : "none"; }
+async function copyLink() {
+  if (!S.link) return;
+  let ok = false;
+  try { await navigator.clipboard.writeText(S.link); ok = true; } catch (e) {
+    const t = document.createElement("textarea");
+    t.value = S.link; document.body.appendChild(t); t.select();
+    try { ok = document.execCommand("copy"); } catch (e2) {}
+    t.remove();
+  }
+  const b = $("#copyLink");
+  b.textContent = ok ? "✅ Copied! Paste it in WhatsApp" : "Copy failed. Long-press: " + S.link;
+  if (navigator.vibrate) try { navigator.vibrate(30); } catch (e) {}
+  setTimeout(() => (b.textContent = "📋 Copy demo link"), 2500);
+}
+$("#copyLink").onclick = copyLink;
+$("#rTip").onclick = () => { if (S.link && $("#rTip").textContent.includes(S.link)) copyLink(); };
+paintCopy();
+
 /* ================= call memory, review and learning ================= */
 let CALL = null;
 const loadCalls = () => { try { return JSON.parse(localStorage.getItem("ch-calls") || "[]"); } catch (e) { return []; } };
@@ -497,6 +518,7 @@ $("#save").onclick = () => {
   for (const k in F) S[k] = /^p|min/.test(k) ? Number($(F[k]).value) || DEF[k] : $(F[k]).value.trim() || DEF[k];
   try { localStorage.setItem("ch-set", JSON.stringify(S)); } catch (e) {}
   $("#settings").close();
+  paintCopy();
   show("open");
 };
 
