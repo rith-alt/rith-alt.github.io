@@ -48,7 +48,7 @@ dialog input{width:100%;padding:11px;border-radius:12px;border:1px solid #3a322a
 .warn{background:#3a1512;color:#ffb4ad;border-radius:14px;padding:10px 12px;font-size:14px;margin-top:10px;display:none}
 body.simple .extra{display:none!important}
 #more{border:0;background:none;color:var(--mute);font-weight:700;font-size:14px;width:100%;padding:14px;margin-top:10px;text-decoration:underline}
-body.simple #reply .say{font-size:26px}body.simple #reply .te{font-size:22px}
+body.simple #reply .say{font-size:21px}body.simple #reply .te{font-size:18px}
 #hist .h{background:var(--card);border-radius:12px;padding:8px 12px;margin-top:6px;font-size:14px;color:var(--mute)}
 </style>
 </head>
@@ -116,7 +116,7 @@ const DEF = { name: "", biz: "Moyaaah", link: "https://rith-alt.github.io/moyaaa
 let S = DEF;
 try { S = { ...DEF, ...JSON.parse(localStorage.getItem("ch-set") || "{}") }; } catch (e) {}
 const inr = (n) => "₹" + Number(n).toLocaleString("en-IN");
-const fill = (t) => t.replace(/\{name\}/g, S.name || "I").replace(/\{biz\}/g, S.biz).replace(/\{p3\}/g, inr(S.p3)).replace(/\{p2\}/g, inr(S.p2)).replace(/\{p1\}/g, inr(S.p1)).replace(/\{min\}/g, inr(S.min)).replace(/\{link\}/g, S.link);
+const fill = (t) => t.replace(/\{name\}/g, S.name || "[your name]").replace(/\{biz\}/g, S.biz).replace(/\{p3\}/g, inr(S.p3)).replace(/\{p2\}/g, inr(S.p2)).replace(/\{p1\}/g, inr(S.p1)).replace(/\{min\}/g, inr(S.min)).replace(/\{link\}/g, S.link);
 
 /* ---------- replies: English + Telugu (as spoken in Hyderabad) ---------- */
 const R = {
