@@ -71,12 +71,17 @@ dialog{max-height:88vh;overflow:auto}
   <h1>📞 Call <b>Helper</b></h1>
   <div class="row">
     <div class="seg" id="lang"><button data-l="en-IN" class="on">EN</button><button data-l="te-IN">తెలుగు</button></div>
+    <button class="icon" id="voiceBtn" aria-label="Voice replies on or off">🔊</button>
     <button class="icon" id="setBtn" aria-label="Settings">⚙️</button>
   </div>
 </header>
 
 <div class="wrap">
   <div class="warn" id="warn"></div>
+  <div class="row" id="voiceRow" style="justify-content:space-between;margin-top:4px">
+    <span style="font-size:13px;color:var(--mute)">🎧 Voice reads the reply in your earphones</span>
+    <div class="seg" id="sayLang"><button data-v="en">Say EN</button><button data-v="te">Say తెలుగు</button></div>
+  </div>
   <button id="mic">🎙️ Start listening</button>
   <div class="callbar"><button id="endCall">✅ End call &amp; review</button><button id="statsBtn">📊 My calls</button></div>
   <p class="note extra">Call on <b>speaker</b> on your phone. Open this app on a <b>second phone or laptop</b> next to it. Choose EN or తెలుగు to match what the owner speaks.</p>
@@ -224,6 +229,7 @@ function show(id, from) {
   $("#rEn").textContent = fill(r.en);
   $("#rTe").textContent = fill(r.te);
   $("#rTip").textContent = r.tip ? "💡 " + fill(r.tip) : "";
+  speak(fill(VOICE.lang === "te" ? r.te : r.en));
   const el = $("#reply");
   el.classList.add("pop");
   setTimeout(() => el.classList.remove("pop"), 200);
@@ -248,6 +254,39 @@ function addHist(text, id) {
   h.textContent = "“" + text.slice(0, 90) + "” → " + (id ? (LABEL[id] || R[id].tag) : "no match");
   $("#hist").prepend(h);
 }
+
+/* ---------- voice replies (free voice built into the phone) ---------- */
+const VOICE = { on: true, lang: "en" };
+try { const v = JSON.parse(localStorage.getItem("ch-voice") || "{}"); Object.assign(VOICE, v); } catch (e) {}
+let speaking = false, lastSaid = "", lastAt = 0;
+function bestVoice() {
+  const vs = speechSynthesis.getVoices();
+  return vs.find((v) => v.lang === "en-IN" && /google/i.test(v.name)) || vs.find((v) => v.lang === "en-IN") || vs.find((v) => /^en/.test(v.lang)) || null;
+}
+function speak(text) {
+  if (!VOICE.on || !("speechSynthesis" in window) || !text) return;
+  if (text === lastSaid && Date.now() - lastAt < 8000) return; // don't repeat the same line while he is still talking
+  lastSaid = text; lastAt = Date.now();
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/₹/g, "rupees "));
+  const v = bestVoice();
+  if (v) u.voice = v;
+  u.lang = v ? v.lang : "en-IN";
+  u.rate = 1.05;
+  u.onstart = () => { speaking = true; if (rec && listening) try { rec.abort(); } catch (e) {} };
+  u.onend = u.onerror = () => { speaking = false; if (rec && listening) try { rec.start(); } catch (e) {} };
+  speechSynthesis.speak(u);
+}
+function paintVoice() {
+  $("#voiceBtn").textContent = VOICE.on ? "🔊" : "🔇";
+  $("#voiceRow").style.display = VOICE.on ? "flex" : "none";
+  document.querySelectorAll("#sayLang button").forEach((b) => b.classList.toggle("on", b.dataset.v === VOICE.lang));
+  try { localStorage.setItem("ch-voice", JSON.stringify(VOICE)); } catch (e) {}
+}
+if ("speechSynthesis" in window) speechSynthesis.onvoiceschanged = () => {};
+$("#voiceBtn").onclick = () => { VOICE.on = !VOICE.on; if (!VOICE.on) speechSynthesis.cancel(); paintVoice(); };
+document.querySelectorAll("#sayLang button").forEach((b) => (b.onclick = () => { VOICE.lang = b.dataset.v; paintVoice(); lastSaid = ""; }));
+paintVoice();
 
 /* ---------- live listening (free speech recognition built into Chrome) ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -277,7 +316,7 @@ function start() {
     if (e.error === "not-allowed") { warn("Microphone blocked. Allow the mic for this site in Chrome settings."); stop(); }
     else if (e.error === "network") warn("Needs internet to listen.");
   };
-  rec.onend = () => { if (listening) try { rec.start(); } catch (e) {} };
+  rec.onend = () => { if (listening && !speaking) try { rec.start(); } catch (e) {} };
   try { rec.start(); } catch (e) {}
   listening = true;
   warn("");
@@ -446,7 +485,7 @@ try { simple = localStorage.getItem("ch-simple") !== "0"; } catch (e) {}
 setSimple(simple);
 $("#more").onclick = () => setSimple(!document.body.classList.contains("simple"));
 
-show("open");
+VOICE._boot = VOICE.on; VOICE.on = false; show("open"); VOICE.on = VOICE._boot; delete VOICE._boot;
 if (!S.name) setTimeout(() => $("#setBtn").click(), 400);
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
