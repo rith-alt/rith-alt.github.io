@@ -32,6 +32,10 @@ h1{font-size:20px;letter-spacing:.5px}h1 b{color:var(--y)}
 #reply .tag{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;opacity:.7}
 #reply .say{font-size:23px;font-weight:800;line-height:1.3;margin-top:6px}
 #reply .te{font-size:20px;font-weight:700;line-height:1.35;margin-top:10px;padding-top:10px;border-top:2px dashed rgba(0,0,0,.2)}
+#reply .sig{font-size:14px;font-weight:800;margin-top:8px;background:rgba(0,0,0,.12);border-radius:10px;padding:6px 10px;display:inline-block}
+#reply .alt{font-size:15px;font-weight:600;margin-top:10px;opacity:.8}
+#reply .alt:before{content:"ALTERNATIVE: ";font-weight:900;font-size:11px;letter-spacing:1px}
+#own{border:0;background:rgba(0,0,0,.12);border-radius:10px;padding:6px 10px;font-weight:800;font-size:13px;margin-top:10px;color:#111}
 #reply .tip{font-size:13px;margin-top:10px;font-weight:600;opacity:.75}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{border:1px solid #3a322a;background:var(--card);color:var(--ink);border-radius:999px;padding:9px 13px;font-size:14px;font-weight:600}
@@ -89,9 +93,12 @@ dialog{max-height:88vh;overflow:auto}
   <div class="label">Say this ↓</div>
   <div id="reply">
     <div class="tag" id="rTag">Start of call</div>
+    <div class="sig" id="rSig"></div>
     <div class="say" id="rEn"></div>
     <div class="te" id="rTe"></div>
+    <div class="alt" id="rAlt"></div>
     <div class="tip" id="rTip"></div>
+    <button id="own">✏️ Use my own words</button>
   </div>
 
   <div class="label extra">Or maybe</div>
@@ -188,6 +195,49 @@ Object.assign(R, {
     te: "Super sir. Naa phone lo chupinchadaniki padi nimishalu vasthanu, okay na? Repu saayantram 4 ki aa, leka Saturday podduna 11 ki aa, edi better?",
     tip: "Give two times, never 'when are you free'. Lock it before you hang up." },
 });
+Object.assign(R, {
+  what_do: { tag: "What exactly do you do?", en: "Simple sir: I build websites for restaurants that bring direct orders on WhatsApp, with no Zomato commission. I already made one for {biz}. Can I show you?", te: "Simple sir: restaurants ki websites chestanu, Zomato commission lekunda WhatsApp lo direct orders vastayi. {biz} kosam already okati chesanu. Chupinchana?" },
+  partner: { tag: "Need to ask my partner", en: "Of course sir, it should be both of you. Shall I come show you both together, tomorrow at 4 or Saturday at 11?", te: "Thappakunda sir, iddaru kalisi chudali. Iddariki kalipi chupistanu, repu 4 ki aa Saturday 11 ki aa?" },
+  internal: { tag: "We do it ourselves", en: "That's smart sir, keeping control. Quick question: does what you have now take direct WhatsApp orders and show up on Google? If yes, I won't waste your time.", te: "Manchidi sir, control meedagge undali. Okka question: ippudu unnadi WhatsApp lo direct orders teesukuntunda, Google lo kanipistunda? Ayithe mee time waste cheyanu." },
+  exit: { tag: "Clear no: exit politely", en: "No problem at all sir, thanks for your time. If you ever want direct orders without commission, just call me. Have a great day.", te: "Parledu sir, mee time ki thanks. Eppudaina commission lekunda direct orders kavali ante call cheyandi. Have a nice day." },
+});
+const HI_EXTRA = {
+  what_do: "Simple sir: restaurants ke liye website banata hoon jisse WhatsApp pe direct order aate hain, Zomato commission ke bina. {biz} ke liye ek bana diya hai. Dikhaun?",
+  partner: "Bilkul sir, dono milke dekhiye. Kal 4 baje ya Saturday 11 baje dono ko saath dikha doon?",
+  internal: "Smart hai sir, control aapke paas. Ek sawaal: abhi wala WhatsApp pe direct order leta hai aur Google pe dikhta hai? Agar haan, toh aapka time waste nahi karunga.",
+  exit: "Koi baat nahi sir, time dene ke liye shukriya. Kabhi bina commission direct orders chahiye ho toh call kariye. Aapka din achha ho.",
+};
+/* what the prospect really means + a second option (Acknowledge → Reframe → Ask) */
+const SIG = {
+  price_high: ["🟠 Price worry: he isn't sure it pays back", "Totally fair sir. If it brought just three direct orders a day, would it be worth it?"],
+  lowball: ["🟠 Testing you: he wants a win, not ₹5k", "Sir, I can't do that price, but I can make it easy: small monthly payments. Would that help?"],
+  have_apps: ["🟡 Comfort with what he has", "Keep Zomato sir. This just adds orders where you keep 100%. How many orders a day do you get there now?"],
+  think: ["🟡 Not sure yet: needs proof", "Of course sir. What would you need to see to feel sure?"],
+  not_interested: ["🔴 Brush-off: hasn't seen the value", "Fair enough sir. Just curious, is that because orders are already enough?"],
+  busy: ["🟡 Bad moment, not a no", "No problem sir. Tomorrow 4 PM or Saturday 11 AM, which is easier?"],
+  relative: ["🟡 Wants to save money", "Great sir. Can I just show you what's possible so you can compare? Two minutes."],
+  who: ["🟡 Suspicious: wants to know you're real", "Sir, I'm local, from Hyderabad. I liked your Instagram, so I built a demo first. Can I show you?"],
+  why_website: ["🟢 Curious: open to hearing more", "Mainly one reason sir: orders without commission. How much do you pay Zomato in a month, roughly?"],
+  send_details: ["email", "e-mail", "mail me", "🟡 Soft no or real interest", "Sure sir. So I send the right thing: more orders or more table bookings, which matters more?"],
+  payment: ["🟢 Buying signal: thinking about paying", "Very easy sir: half to start, rest after launch. Shall we start this week?"],
+  trust: ["🟠 Fear of being cheated", "Fair sir. You pay the rest only after it's live and you're happy. What else would make you comfortable?"],
+  updates: ["🟢 Buying signal: imagining using it", "Yes sir, anytime. What would you change first, prices or new burgers?"],
+  time: ["🟢 Buying signal: planning ahead", "Two or three days sir. Shall I block this week for you?"],
+  what_do: ["what do you do", "what exactly", "what is this about", "what are you selling", "em chestaru", "enti idi", "ఏం చేస్తారు", "kya karte ho", "kya bechte", "क्या करते"],
+  partner: ["partner", "my brother", "ask my", "discuss with", "family", "bhagaswamy", "భాగస్వామి", "అన్నయ్య", "partner se", "bhai se", "पार्टनर"],
+  internal: ["ourselves", "internally", "in house", "in-house", "our own team", "we do it", "memu chesukuntam", "మేమే", "khud karte", "hum khud", "खुद"],
+  how_much: ["🟢 Buying signal: price question", "Sir, first let me show you, then I'll give three options. Tomorrow 4 or Saturday 11?"],
+  gatekeeper: ["⚪ Not the decision maker", "Who decides on things like this, and what's the best time to reach them?"],
+  have_website: ["🟡 Has an alternative: compare, don't attack", "Nice sir. When was it last updated? Does it take WhatsApp orders?"],
+  bad_experience: ["🟠 Burned before: needs no-risk", "Sorry to hear that sir. What went wrong last time?"],
+  meeting: ["🟢 Buying signal: interested", "Shall I come tomorrow at 4? Ten minutes only."],
+  yes: ["🟢 Ready: close now", "Super sir. Fifty percent now, rest on launch. Shall I send the details on WhatsApp now?"],
+  what_do: ["🟢 Curious: give a one-line answer", "In short sir: more orders, zero commission. Can I show you?"],
+  partner: ["🟡 Shared decision", "What do you think your partner will ask? Let's answer it together."],
+  internal: ["🟡 Already has a way: find the gap", "How do people order directly from you today?"],
+  exit: ["🔴 Clear no: respect it", "Thank you sir. Have a great day."],
+};
+const BUY = ["payment", "updates", "time", "how_much", "meeting", "yes", "why_website", "what_do"];
 const HI = {
   gatekeeper: "Koi baat nahi ji. Wahan website aur online orders kaun dekhte hain? Unka naam kya hai, aur kab call karun toh milenge? {biz} ke liye bana demo WhatsApp pe bhej deta hoon, pehle dekh lenge.",
   have_website: "Bahut achha sir. Ek sawaal: kya woh WhatsApp pe order leti hai, aur 'best burger Banjara Hills' search karne pe dikhti hai? Do minute mein farak dikhata hoon.",
@@ -214,6 +264,7 @@ const HI = {
   time: "Bahut jaldi sir. Site already ready hai. Aapke apne domain pe do teen din mein live.",
   how_much: "Aapko kya chahiye uspe depend karta hai sir. Pehle {biz} ke liye bani site dekhiye. Phir teen options bataunga, chhote se shuru. Abhi link bhejoon?",
 };
+Object.assign(HI, HI_EXTRA);
 for (const k in HI) if (R[k]) R[k].hi = HI[k];
 R.ask.tip = "One or two questions only. On cold calls you earn questions; sell the next step. Note his order number for the money step.";
 R.hook.tip = "Pause after the saving. Successful cold calls: you talk a little more than him (about 55%).";
@@ -241,7 +292,7 @@ const K = {
   time: ["kitne din", "कितने दिन", "कब तक", "how long", "how many days", "when", "time", "ready", "enni rojulu", "ఎన్ని రోజులు", "ఎప్పుడు", "టైం"],
   yes: ["theek hai", "chalo", "ठीक है", "चलो", "हाँ करो", "कर दो", "okay", "ok", "deal", "done", "let's do", "lets do", "go ahead", "interested", "fine", "sare", "సరే", "ఓకే", "చేయండి", "చెయ్యండి"],
 };
-const LABEL = { price_high: "Too expensive", lowball: "Very low offer", have_apps: "Have Zomato/Insta", think: "Let me think", not_interested: "Not interested", busy: "Busy", relative: "Someone else will make", who: "Who are you", why_website: "Why website", send_details: "Send details", payment: "Payment", trust: "Trust", updates: "Changes later", time: "How long", yes: "Yes / OK", how_much: "How much?", gatekeeper: "Owner not there", have_website: "Have a website", bad_experience: "Tried before", meeting: "Sounds good" };
+const LABEL = { price_high: "Too expensive", lowball: "Very low offer", have_apps: "Have Zomato/Insta", think: "Let me think", not_interested: "Not interested", busy: "Busy", relative: "Someone else will make", who: "Who are you", why_website: "Why website", send_details: "Send details", payment: "Payment", trust: "Trust", updates: "Changes later", time: "How long", yes: "Yes / OK", how_much: "How much?", gatekeeper: "Owner not there", what_do: "What do you do?", partner: "Ask my partner", internal: "We do it ourselves", have_website: "Have a website", bad_experience: "Tried before", meeting: "Sounds good" };
 
 /* a low number like 5k / 5000 / ఐదు వేలు means a lowball offer */
 function lowNumber(t) {
@@ -279,7 +330,13 @@ function show(id, from) {
   CUR = id;
   const L = lang === "te-IN" ? "te" : lang === "hi-IN" ? "hi" : "en";
   const main = fill(r[L] || r.en);
-  $("#rEn").textContent = main;
+  const own = OWN[id + "_" + L];
+  $("#rEn").textContent = own || main;
+  const sg = SIG[id];
+  $("#rSig").textContent = sg ? sg[0] : "";
+  $("#rSig").style.display = sg ? "inline-block" : "none";
+  $("#rAlt").textContent = own ? main : sg ? sg[1] : "";
+  $("#rAlt").style.display = (own || sg) ? "block" : "none";
   $("#rTe").textContent = L === "en" ? "" : fill(r.en);
   $("#rTe").style.display = L === "en" ? "none" : "block";
   $("#rTip").textContent = r.tip ? "💡 " + fill(r.tip) : "";
@@ -335,7 +392,13 @@ function start() {
       if (te || hi) setHint(te ? "te-IN" : "hi-IN");
     }
     const hits = classify(now);
-    if (hits.length) { show(hits[0], true); setAlts(hits.slice(1)); }
+    if (hits.length) {
+      let top = hits[0];
+      if (fin && CALL) { CALL.seen = CALL.seen || {}; CALL.seen[top] = (CALL.seen[top] || 0) + 1;
+        if (top === "not_interested" && CALL.seen[top] >= 2) top = "exit"; }
+      if (top !== CUR) show(top, true);
+      setAlts(hits.slice(1));
+    }
     if (fin) { addHist(fin, hits[0]); if (CALL) CALL.lines.push({ t: Date.now() - CALL.start, text: fin.slice(0, 200).trim() }); }
   };
   rec.onerror = (e) => {
@@ -372,6 +435,18 @@ function stop() {
 }
 $("#mic").onclick = () => { if (!listening) beginCall(); listening ? stop() : start(); };
 document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = () => b.closest("dialog").close()));
+
+let OWN = {};
+try { OWN = JSON.parse(localStorage.getItem("ch-own") || "{}"); } catch (e) {}
+$("#own").onclick = () => {
+  const L = lang === "te-IN" ? "te" : lang === "hi-IN" ? "hi" : "en";
+  const key = CUR + "_" + L;
+  const t = prompt("Type how YOU would say it (leave empty to go back to the app's line):", OWN[key] || "");
+  if (t === null) return;
+  if (t.trim()) OWN[key] = t.trim(); else delete OWN[key];
+  try { localStorage.setItem("ch-own", JSON.stringify(OWN)); } catch (e) {}
+  show(CUR);
+};
 
 /* ================= call memory, review and learning ================= */
 let CALL = null;
